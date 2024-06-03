@@ -1,5 +1,7 @@
 #include "lexer.h"
 #include "token.h"
+#include "types.h"
+#include "operator.h"
 #include <stdbool.h>
 #include <ctype.h>
 
@@ -7,6 +9,7 @@ const char *TokenTypeNames[] = {
   [TOKEN_EOF]        = "eof",
   [TOKEN_ERROR]      = "error",
   [TOKEN_IDENTIFIER] = "identifier",
+  [TOKEN_OPERATOR]   = "operator",
 };
 
 void lexer_tokenize(Lexer *lex) {
@@ -67,6 +70,18 @@ void lexer_tokenize(Lexer *lex) {
         tok.len++;
         lexer_inc(lex);
       }
+      lexer_emit(lex, &tok);
+      break;
+    }
+
+    // operators
+    uvar oplen = isop(lex->lex);
+    if (oplen > 0) {
+      tok.type = TOKEN_OPERATOR;
+      tok.len = oplen;
+      lex->lex += oplen;
+      lex->col += oplen;
+      lex->pos += oplen;
       lexer_emit(lex, &tok);
       break;
     }
