@@ -61,9 +61,9 @@ void lexer_tokenize(Lexer *lex) {
     };
 
     // identifier token
-    if (isalpha(*lex->lex)) {
+    if (isalpha(*lex->lex) || *lex->lex == '_') {
       tok.type = TOKEN_IDENTIFIER;
-      while (isalnum(*lex->lex)) {
+      while (isalnum(*lex->lex) || *lex->lex == '_') {
         tok.len++;
         lexer_inc(lex);
       }

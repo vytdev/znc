@@ -31,3 +31,7 @@ char *util_readfile(const char *path) {
   return text;
 }
 
+void pview(char *str, uvar len) {
+  fwrite(str, 1, len, stdout);
+}
+

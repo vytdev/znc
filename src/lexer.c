@@ -31,9 +31,9 @@ int lexer_init(Lexer *lex, char *name, char *src) {
   return 0;
 }
 
-int lexer_free(Lexer *lex) {
+void lexer_free(Lexer *lex) {
   if (!lex)
-    return 1;
+    return;
   lex->name  = NULL;
   lex->input = NULL;
   lex->lex   = NULL;
@@ -41,12 +41,12 @@ int lexer_free(Lexer *lex) {
     free(lex->toks);
     lex->toks = NULL;
   }
-  return 0;
+  return;
 }
 
-int lexer_inc(Lexer *lex) {
+void lexer_inc(Lexer *lex) {
   if (!lex)
-    return 1;
+    return;
 
   // increment counters based on chars
   lex->pos++;
@@ -66,22 +66,22 @@ int lexer_inc(Lexer *lex) {
       lex->col++;
   }
 
-  return 0;
+  return;
 }
 
-int lexer_emit(Lexer *lex, Token *tok) {
+void lexer_emit(Lexer *lex, Token *tok) {
   if (!lex || !tok)
-    return 1;
+    return;
 
   // already eof, you cannot emit more tokens
   if (lex->eof)
-    return 1;
+    return;
 
   // the list is full, re-allocate it!
   if (lex->talloc <= lex->tcnt) {
     Token *tmp = (Token*)realloc(lex->toks, sizeof(Token) * lex->talloc * 2);
     if (!tmp)
-      return 1;
+      return;
     lex->toks = tmp;
     lex->talloc *= 2;
   }
@@ -95,7 +95,7 @@ int lexer_emit(Lexer *lex, Token *tok) {
   out->line   = tok->line;
   out->col    = tok->col;
   out->pos    = tok->pos;
-  return 0;
+  return;
 }
 
 Token *lexer_consume(Lexer *lex) {
@@ -138,11 +138,11 @@ Token *lexer_peek(Lexer *lex, var offst) {
   return &lex->toks[absp];
 }
 
-int lexer_seek(Lexer *lex, var offst) {
+void lexer_seek(Lexer *lex, var offst) {
   if (!lex)
-    return 1;
+    return;
   lex->pind += offst;
-  return 0;
+  return;
 }
 
 void print_token(Token *tok, const char *msg, ...) {

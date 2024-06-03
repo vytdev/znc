@@ -1,5 +1,8 @@
+#include "token.h"
 #include "util.h"
 #include "lexer.h"
+#include "ast.h"
+#include "arena.h"
 #include <stdio.h>
 
 int main(int argc, char **argv) {
@@ -22,13 +25,28 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // TODO: ast gen
-  while (!lex.eof) {
-    Token *tok = lexer_consume(&lex);
-    if (!tok) break;
-    print_token(tok, "token type=%s\n", TokenTypeNames[tok->type]);
+  // init arena
+  Arena arena;
+  if (!arena_init(&arena)) {
+    fprintf(stderr, "znc: failed to init arena\n");
+    return 1;
   }
 
+  // TODO: ast gen
+  while (1) {
+    // just to break the loop
+    Token *next = lexer_peek(&lex, 1);
+    if (!next || next->type != TOKEN_IDENTIFIER)
+      break;
+
+    // print identifier nodes
+    ASTIdentifier *node = ast_identifier(&lex, &arena);
+    if (!node) break;
+    pview(node->name, node->len);
+    fputc('\n', stdout);
+  }
+
+  arena_free(&arena);
   lexer_free(&lex);
   return 1;
 }

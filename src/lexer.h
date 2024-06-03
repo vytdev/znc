@@ -38,13 +38,13 @@ typedef struct Lexer {
 int lexer_init(Lexer *lex, char *name, char *src);
 
 /* free a lexer context */
-int lexer_free(Lexer *lex);
+void lexer_free(Lexer *lex);
 
 /* increment the lexer counter */
-int lexer_inc(Lexer *lex);
+void lexer_inc(Lexer *lex);
 
 /* emit a token */
-int lexer_emit(Lexer *lex, Token *tok);
+void lexer_emit(Lexer *lex, Token *tok);
 
 /* get next token and advance the lexer */
 Token *lexer_consume(Lexer *lex);
@@ -53,7 +53,7 @@ Token *lexer_consume(Lexer *lex);
 Token *lexer_peek(Lexer *lex, var offst);
 
 /* move the position indicator */
-int lexer_seek(Lexer *lex, var offst);
+void lexer_seek(Lexer *lex, var offst);
 
 /* print a token */
 void print_token(Token *tok, const char *msg, ...);
