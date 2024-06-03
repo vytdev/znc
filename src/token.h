@@ -8,6 +8,7 @@ typedef enum {
   TOKEN_ERROR,   // lexer error
   TOKEN_IDENTIFIER,
   TOKEN_OPERATOR,
+  TOKEN_BRACKET,
 } TokenType;
 
 // token type names

@@ -10,6 +10,7 @@ const char *TokenTypeNames[] = {
   [TOKEN_ERROR]      = "error",
   [TOKEN_IDENTIFIER] = "identifier",
   [TOKEN_OPERATOR]   = "operator",
+  [TOKEN_BRACKET]    = "bracket",
 };
 
 void lexer_tokenize(Lexer *lex) {
@@ -82,6 +83,19 @@ void lexer_tokenize(Lexer *lex) {
       lex->lex += oplen;
       lex->col += oplen;
       lex->pos += oplen;
+      lexer_emit(lex, &tok);
+      break;
+    }
+
+    // brackets
+    if (
+      *lex->lex == '(' || *lex->lex == ')' ||
+      *lex->lex == '{' || *lex->lex == '}' ||
+      *lex->lex == '[' || *lex->lex == ']'
+    ) {
+      tok.type = TOKEN_BRACKET;
+      tok.len = 1;
+      lexer_inc(lex);
       lexer_emit(lex, &tok);
       break;
     }
