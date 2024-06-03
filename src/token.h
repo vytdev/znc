@@ -5,6 +5,7 @@
 typedef enum {
   TOKEN_EOF,     // end-of-file
   TOKEN_ERROR,   // lexer error
+  TOKEN_IDENTIFIER,
 } TokenType;
 
 // token type names

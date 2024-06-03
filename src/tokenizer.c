@@ -1,10 +1,12 @@
 #include "lexer.h"
 #include "token.h"
 #include <stdbool.h>
+#include <ctype.h>
 
 const char *TokenTypeNames[] = {
-  [TOKEN_EOF]   = "eof",
-  [TOKEN_ERROR] = "error",
+  [TOKEN_EOF]        = "eof",
+  [TOKEN_ERROR]      = "error",
+  [TOKEN_IDENTIFIER] = "identifier",
 };
 
 void lexer_tokenize(Lexer *lex) {
@@ -58,7 +60,16 @@ void lexer_tokenize(Lexer *lex) {
       .pos    = lex->pos,
     };
 
-    // TODO: process tokens here!
+    // identifier token
+    if (isalpha(*lex->lex)) {
+      tok.type = TOKEN_IDENTIFIER;
+      while (isalnum(*lex->lex)) {
+        tok.len++;
+        lexer_inc(lex);
+      }
+      lexer_emit(lex, &tok);
+      break;
+    }
 
     // unknown token
     while (
