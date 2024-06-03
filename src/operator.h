@@ -2,6 +2,11 @@
 #define _ZNC_OPERATOR_H
 #include "types.h"
 
+// this value should reflect the highest return
+// value of getprec() function. update this if
+// necessary
+#define OP_HIGHEST_PREC 11
+
 typedef enum {
   OP_UNK = 0,
   OP_DBL_AMP_EQL, // &&=

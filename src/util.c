@@ -35,3 +35,11 @@ void pview(char *str, uvar len) {
   fwrite(str, 1, len, stdout);
 }
 
+int valptr(void *ptr) {
+  if (!ptr) {
+    fprintf(stderr, "znc: out of memory\n");
+    return 1;
+  }
+  return 0;
+}
+

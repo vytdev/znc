@@ -1,4 +1,3 @@
-#include "token.h"
 #include "util.h"
 #include "lexer.h"
 #include "ast.h"
@@ -32,19 +31,12 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // TODO: ast gen
-  while (1) {
-    // just to break the loop
-    Token *next = lexer_peek(&lex, 1);
-    if (!next || next->type != TOKEN_IDENTIFIER)
-      break;
+  ASTExpr *expr = parse_expr(&lex, &arena);
 
-    // print identifier nodes
-    ASTIdentifier *node = ast_identifier(&lex, &arena);
-    if (!node) break;
-    pview(node->name, node->len);
-    fputc('\n', stdout);
-  }
+#ifdef _DEBUG
+  if (expr) print_expr(expr);
+  fputc('\n', stdout);
+#endif // _DEBUG
 
   arena_free(&arena);
   lexer_free(&lex);
