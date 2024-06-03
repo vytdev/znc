@@ -64,6 +64,15 @@ OperatorType getop(char *text);
 /* get operator precedence of binary operators */
 int getprec(OperatorType type);
 
+/* returns true if the given is a unary prefix operator */
+int op_isprefix(OperatorType type);
+
+/* returns true if the given is a unary postfix operator */
+int op_ispostfix(OperatorType type);
+
+/* returns true if the given is a binary operator */
+int op_isinfix(OperatorType type);
+
 // - ternary operators = lowest precedence
 // - binary operators  = varied precedence
 // - unary operators   = highest precedence

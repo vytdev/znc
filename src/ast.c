@@ -5,6 +5,7 @@
 #include "operator.h"
 #include "util.h"
 #include <stdio.h>
+#include <stdbool.h>
 
 // NOTES:
 // - only use valptr() on aaloc, lexer_peek, and lexer_consume outputs
@@ -96,8 +97,19 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
     return expr;
   }
 
-  // unary operators
-  // TODO
+  // prefix unary operators
+  if (next->type == TOKEN_OPERATOR && op_isprefix(getop(next->lexeme))) {
+    lexer_consume(lex);
+    ASTExpr *expr = aaloc(arena, ASTExpr);
+    if (valptr(expr)) return NULL;
+    expr->type = AST_EXPR_UNOP;
+    expr->val.unop.op = getop(next->lexeme);
+    expr->val.unop.isprefix = true;
+    ASTExpr *sub = parse_factor(lex, arena);
+    if (!sub) return NULL;
+    expr->val.unop.val = sub;
+    return expr;
+  }
 
   print_token(next, "syntax error: unexpected token\n");
   return NULL;
@@ -112,6 +124,11 @@ void print_expr(ASTExpr *expr) {
 
   fputc('(', stdout);
   switch (expr->type) {
+    case AST_EXPR_UNOP:
+      if (expr->val.unop.isprefix) printf("%s", OperatorNames[expr->val.unop.op]);
+      print_expr(expr->val.unop.val);
+      if (!expr->val.unop.isprefix) printf("%s", OperatorNames[expr->val.unop.op]);
+      break;
     case AST_EXPR_BINOP:
       print_expr(expr->val.binop.lhs);
       printf(" %s ", OperatorNames[expr->val.binop.op]);

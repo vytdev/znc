@@ -4,11 +4,18 @@
 #include "lexer.h"
 #include "arena.h"
 #include "operator.h"
+#include <stdbool.h>
 
 typedef struct ASTIdentifier {
   char *name;           /* view to the name */
   uvar len;             /* length of the text */
 } ASTIdentifier;
+
+typedef struct {
+  struct ASTExpr *val;
+  bool isprefix;
+  OperatorType op;
+} ASTUnaryOp;
 
 typedef struct {
   struct ASTExpr *lhs;
@@ -18,11 +25,13 @@ typedef struct {
 
 typedef enum {
   AST_EXPR_IDENTIFIER,
+  AST_EXPR_UNOP,
   AST_EXPR_BINOP,
 } ASTExprType;
 
 typedef union {
   ASTIdentifier ident;
+  ASTUnaryOp unop;
   ASTBinaryOp binop;
 } ASTExprVal;
 

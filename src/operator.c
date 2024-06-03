@@ -109,3 +109,31 @@ int getprec(OperatorType type) {
   }
 }
 
+int op_isprefix(OperatorType type) {
+  switch (type) {
+    case OP_DBL_PLS:
+    case OP_DBL_DSH:
+    case OP_EXC:
+    case OP_PLS:
+    case OP_DSH:
+    case OP_TDL:
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+int op_ispostfix(OperatorType type) {
+  switch (type) {
+    case OP_DBL_PLS:
+    case OP_DBL_DSH:
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+int op_isinfix(OperatorType type) {
+  return getprec(type) > 0;
+}
+
