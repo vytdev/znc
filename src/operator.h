@@ -43,6 +43,8 @@ typedef enum {
   OP_EQL,         // =
   OP_LES,         // <
   OP_GRT,         // >
+  OP_DOT,         // .
+  // the subscript operator is handled differently
 } OperatorType;
 
 // operators

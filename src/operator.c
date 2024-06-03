@@ -14,7 +14,7 @@ const char *OperatorNames[] = {
 
   "!", "+", "-", "*", "/", "%",
   "&", "|", "^", "~", "?", ":",
-  ",", "=", "<", ">",
+  ",", "=", "<", ">", ".",
 };
 
 uvar isop(char *text) {
@@ -98,6 +98,10 @@ int getprec(OperatorType type) {
     // arithmetic EXPONENT
     case OP_DBL_AST:
       return 10;
+
+    // member-access operator
+    case OP_DOT:
+      return 11;
 
     // default case
     default:
