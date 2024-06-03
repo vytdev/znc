@@ -72,12 +72,72 @@ ASTExpr *parse_infix(Lexer *lex, Arena *arena, ASTExpr *lhs, int minprec) {
     node->val.binop.op = op;
     node->val.binop.rhs = rhs;
     lhs = node;
+
+    next = lexer_peek(lex, 1);
+    if (valptr(next)) return NULL;
  }
 
   return lhs;
 }
 
 ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
+  Token *next = lexer_peek(lex, 1);
+  if (valptr(next))
+    return NULL;
+
+  // hierarchy:
+  //   a b C d e   ->   (a(b(((C)d)e)))
+  //   d -> e -> b -> a
+  // unary precedence rules apply:
+  //   right -> right-most -> left -> left-most
+
+  // prefix unary operators
+  if (next->type == TOKEN_OPERATOR && op_isprefix(getop(next->lexeme))) {
+    lexer_consume(lex);
+
+    // make a new node containing the unary op
+    ASTExpr *expr = aaloc(arena, ASTExpr);
+    if (valptr(expr)) return NULL;
+    expr->type = AST_EXPR_UNOP;
+    expr->val.unop.op = getop(next->lexeme);
+    expr->val.unop.isprefix = true;
+
+    // process node value
+    ASTExpr *sub = parse_factor(lex, arena);
+    if (!sub) return NULL;
+    expr->val.unop.val = sub;
+
+    return expr;
+  }
+
+  // process primary
+  ASTExpr *expr = parse_primary(lex, arena);
+  if (!expr) return NULL;
+  next = lexer_peek(lex, 1);
+  if (valptr(next)) return NULL;
+
+  // while there's still postfix ops...
+  while (next->type == TOKEN_OPERATOR && op_ispostfix(getop(next->lexeme))) {
+    lexer_consume(lex);
+
+    // new node
+    ASTExpr *node = aaloc(arena, ASTExpr);
+    if (valptr(node)) return NULL;
+    node->type = AST_EXPR_UNOP;
+    node->val.unop.op = getop(next->lexeme);
+    node->val.unop.isprefix = false;
+    node->val.unop.val = expr;
+    expr = node;
+
+    // for possible subsequent postfix ops
+    next = lexer_peek(lex, 1);
+    if (valptr(next)) return NULL;
+  }
+
+  return expr;
+}
+
+ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
   Token *next = lexer_peek(lex, 1);
   if (valptr(next))
     return NULL;
@@ -94,20 +154,6 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
     next = lexer_consume(lex);
     if (valptr(next)) return NULL;
     if (expect_token(next, TOKEN_BRACKET, ")")) return NULL;
-    return expr;
-  }
-
-  // prefix unary operators
-  if (next->type == TOKEN_OPERATOR && op_isprefix(getop(next->lexeme))) {
-    lexer_consume(lex);
-    ASTExpr *expr = aaloc(arena, ASTExpr);
-    if (valptr(expr)) return NULL;
-    expr->type = AST_EXPR_UNOP;
-    expr->val.unop.op = getop(next->lexeme);
-    expr->val.unop.isprefix = true;
-    ASTExpr *sub = parse_factor(lex, arena);
-    if (!sub) return NULL;
-    expr->val.unop.val = sub;
     return expr;
   }
 

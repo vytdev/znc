@@ -49,8 +49,11 @@ ASTExpr *parse_expr(Lexer *lex, Arena *arena);
 /* process infix (binary) operators */
 ASTExpr *parse_infix(Lexer *lex, Arena *arena, ASTExpr *lhs, int minprec);
 
-/* process primary expressions */
+/* process factor (unary ops) expressions */
 ASTExpr *parse_factor(Lexer *lex, Arena *arena);
+
+/* process primary (identifiers, literals, etc.) expressions */
+ASTExpr *parse_primary(Lexer *lex, Arena *arena);
 
 #ifdef _DEBUG
 
