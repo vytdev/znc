@@ -134,6 +134,38 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
     if (valptr(next)) return NULL;
   }
 
+  // check ternary
+  next = lexer_peek(lex, 1);
+  if (valptr(next)) return NULL;
+  if (next->type == TOKEN_OPERATOR && getop(next->lexeme) == OP_QST) {
+    lexer_consume(lex); // consume '?'
+
+    ASTExpr *node = aaloc(arena, ASTExpr);
+    if (valptr(node)) return NULL;
+    node->type = AST_EXPR_TERNOP;
+    node->val.ternop.op = OP_QST;
+    node->val.ternop.lch = expr;
+
+    ASTExpr *sub = NULL;
+
+    // true expression
+    sub = parse_factor(lex, arena);
+    if (!sub) return NULL;
+    node->val.ternop.mch = sub;
+
+    // consume colon
+    next = lexer_consume(lex);
+    if (expect_token(next, TOKEN_OPERATOR, ":"))
+      return NULL;
+
+    // false expression
+    sub = parse_factor(lex, arena);
+    if (!sub) return NULL;
+    node->val.ternop.rch = sub;
+
+    expr = node;
+  }
+
   return expr;
 }
 
@@ -179,6 +211,17 @@ void print_expr(ASTExpr *expr) {
       print_expr(expr->val.binop.lhs);
       printf(" %s ", OperatorNames[expr->val.binop.op]);
       print_expr(expr->val.binop.rhs);
+      break;
+    case AST_EXPR_TERNOP:
+      if (expr->val.ternop.op != OP_QST) {
+        printf("null)");
+        return;
+      }
+      print_expr(expr->val.ternop.lch);
+      printf(" ? ");
+      print_expr(expr->val.ternop.mch);
+      printf(" : ");
+      print_expr(expr->val.ternop.rch);
       break;
     case AST_EXPR_IDENTIFIER:
       pview(expr->val.ident.name, expr->val.ident.len);

@@ -11,28 +11,37 @@ typedef struct ASTIdentifier {
   uvar len;             /* length of the text */
 } ASTIdentifier;
 
-typedef struct {
+typedef struct ASTUnaryOp {
   struct ASTExpr *val;
   bool isprefix;
   OperatorType op;
 } ASTUnaryOp;
 
-typedef struct {
+typedef struct ASTBinaryOp {
   struct ASTExpr *lhs;
   struct ASTExpr *rhs;
   OperatorType op;
 } ASTBinaryOp;
 
+typedef struct ASTTernaryOp {
+  struct ASTExpr *lch;
+  struct ASTExpr *mch;
+  struct ASTExpr *rch;
+  OperatorType op;
+} ASTTernaryOp;
+
 typedef enum {
   AST_EXPR_IDENTIFIER,
   AST_EXPR_UNOP,
   AST_EXPR_BINOP,
+  AST_EXPR_TERNOP,
 } ASTExprType;
 
 typedef union {
   ASTIdentifier ident;
   ASTUnaryOp unop;
   ASTBinaryOp binop;
+  ASTTernaryOp ternop;
 } ASTExprVal;
 
 typedef struct ASTExpr {
@@ -49,7 +58,7 @@ ASTExpr *parse_expr(Lexer *lex, Arena *arena);
 /* process infix (binary) operators */
 ASTExpr *parse_infix(Lexer *lex, Arena *arena, ASTExpr *lhs, int minprec);
 
-/* process factor (unary ops) expressions */
+/* process factor (unary and ternary ops) expressions */
 ASTExpr *parse_factor(Lexer *lex, Arena *arena);
 
 /* process primary (identifiers, literals, etc.) expressions */
