@@ -210,6 +210,8 @@ void print_token(Token *tok, const char *msg, ...) {
 }
 
 int expect_token(Token *tok, TokenType type, char *text) {
+  if (!tok)
+    return 1;
   if (cmp_token(tok, type, text))
     return 0;
 

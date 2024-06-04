@@ -42,6 +42,7 @@ ASTExpr *parse_infix(Lexer *lex, Arena *arena, ASTExpr *lhs, int minprec) {
   // ensure the left hand side is processed
   if (minprec > OP_HIGHEST_PREC) return lhs;
   lhs = parse_infix(lex, arena, lhs, minprec + 1);
+  if (!lhs) return NULL;
 
   // get next token
   Token *next = lexer_peek(lex, 1);
@@ -154,6 +155,7 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
 
     // consume colon
     next = lexer_consume(lex);
+    if (!next) return NULL;
     if (expect_token(next, TOKEN_OPERATOR, ":"))
       return NULL;
 
@@ -243,6 +245,7 @@ ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs) {
 
     // consume ']'
     next = lexer_consume(lex);
+    if (!next) return NULL;
     if (expect_token(next, TOKEN_BRACKET, "]"))
       return NULL;
 
@@ -271,6 +274,7 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
 
   // semi-colon
   next = lexer_consume(lex);
+  if (!next) return NULL;
   if (expect_token(next, TOKEN_DELIMETER, ";"))
     return NULL;
 
