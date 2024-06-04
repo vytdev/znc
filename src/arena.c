@@ -8,7 +8,10 @@ Arena *arena_init(uvar bsize) {
 
   // allocate arena
   Arena *arena = (Arena*)malloc(sizeof(Arena) + bsize);
-  if (!arena) return NULL;
+  if (!arena) {
+    fprintf(stderr, "znc: out of memory\n");
+    return NULL;
+  }
 
   // init fields
   arena->next = NULL;

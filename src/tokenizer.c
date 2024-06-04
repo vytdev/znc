@@ -118,7 +118,7 @@ void lexer_tokenize(Lexer *lex) {
       tok.len++;
       lexer_inc(lex);
     }
-    print_token(&tok, "unknown token\n");
+    print_token(&tok, "syntax error: unknown token\n");
     tok.type = TOKEN_ERROR;
     lexer_emit(lex, &tok);
     lex->eof = true;

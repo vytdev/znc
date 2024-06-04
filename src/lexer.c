@@ -45,7 +45,7 @@ void lexer_free(Lexer *lex) {
 }
 
 void lexer_inc(Lexer *lex) {
-  if (!lex)
+  if (!lex || lex->eof)
     return;
 
   // increment counters based on chars
@@ -80,8 +80,11 @@ void lexer_emit(Lexer *lex, Token *tok) {
   // the list is full, re-allocate it!
   if (lex->talloc <= lex->tcnt) {
     Token *tmp = (Token*)realloc(lex->toks, sizeof(Token) * lex->talloc * 2);
-    if (!tmp)
+    if (!tmp) {
+      fprintf(stderr, "znc: out of memory\n");
+      lex->eof = true;
       return;
+    }
     lex->toks = tmp;
     lex->talloc *= 2;
   }
@@ -107,8 +110,10 @@ Token *lexer_consume(Lexer *lex) {
     lexer_tokenize(lex);
 
   // maybe eof?
-  if (lex->tcnt <= lex->pind)
+  if (lex->tcnt <= lex->pind) {
+    if (!lex->eof) return NULL;
     return &lex->toks[lex->tcnt - 1];
+  }
 
   // return the requested token
   return &lex->toks[lex->pind++];
@@ -131,8 +136,10 @@ Token *lexer_peek(Lexer *lex, var offst) {
     lexer_tokenize(lex);
 
   // lexer_tokenize() didn't reached the target position, eof?
-  if (lex->tcnt <= absp)
+  if (lex->tcnt <= absp) {
+    if (!lex->eof) return NULL;
     return &lex->toks[lex->tcnt - 1];
+  }
 
   // the requested token
   return &lex->toks[absp];
@@ -206,7 +213,11 @@ int expect_token(Token *tok, TokenType type, char *text) {
   if (cmp_token(tok, type, text))
     return 0;
 
-  if (text)
+  if (tok->type == TOKEN_ERROR)
+    return 1; // the tokenizer already printed the error
+  if (tok->type == TOKEN_EOF)
+    print_token(tok, "syntax error: unexpected end of input\n");
+  else if (text)
     print_token(tok, "syntax error: expected '%s'\n", text);
   else
     print_token(tok, "syntax error: unexpected token\n");

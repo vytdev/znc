@@ -8,8 +8,5 @@ char *util_readfile(const char *path);
 /* print string up to a given length */
 void pview(char *str, uvar len);
 
-/* returns whether the given pointer is NULL */
-int valptr(void *ptr);
-
 #endif // _ZNC_UTIL_H
 

@@ -3,21 +3,22 @@
 #include "arena.h"
 #include "token.h"
 #include "operator.h"
-#include "util.h"
 #include <stdio.h>
 #include <stdbool.h>
+#ifdef _DEBUG
+#include "util.h"
+#endif // _DEBUG
 
 // NOTES:
-// - only use valptr() on aaloc, lexer_peek, and lexer_consume outputs
 // - it is not necessary to check the 'lex' and 'arena' ptr
 
 ASTExpr *parse_identifier(Lexer *lex, Arena *arena) {
   ASTExpr *node = aaloc(arena, ASTExpr);
-  if (valptr(node)) return NULL;
+  if (!node) return NULL;
 
   // consume token, check if this is an identifier
   Token *tok = lexer_consume(lex);
-  if (valptr(tok))
+  if (!tok)
     return NULL;
 
   if (expect_token(tok, TOKEN_IDENTIFIER, NULL))
@@ -44,7 +45,7 @@ ASTExpr *parse_infix(Lexer *lex, Arena *arena, ASTExpr *lhs, int minprec) {
 
   // get next token
   Token *next = lexer_peek(lex, 1);
-  if (valptr(next)) return NULL;
+  if (!next) return NULL;
 
   // while token
   while (next->type == TOKEN_OPERATOR && getprec(getop(next->lexeme)) >= minprec) {
@@ -57,16 +58,16 @@ ASTExpr *parse_infix(Lexer *lex, Arena *arena, ASTExpr *lhs, int minprec) {
 
     // process higher-precedence tokens
     next = lexer_peek(lex, 1);
-    if (valptr(next)) return NULL;
+    if (!next) return NULL;
     while (next->type == TOKEN_OPERATOR && getprec(getop(next->lexeme)) > minprec) {
       rhs = parse_infix(lex, arena, rhs, minprec + 1);
       next = lexer_peek(lex, 1);
-     if (valptr(next)) return NULL;
+     if (!next) return NULL;
     }
 
     // new expr
     ASTExpr *node = aaloc(arena, ASTExpr);
-    if (valptr(node)) return NULL;
+    if (!node) return NULL;
     node->type = AST_EXPR_BINOP;
     node->val.binop.lhs = lhs;
     node->val.binop.op = op;
@@ -74,7 +75,7 @@ ASTExpr *parse_infix(Lexer *lex, Arena *arena, ASTExpr *lhs, int minprec) {
     lhs = node;
 
     next = lexer_peek(lex, 1);
-    if (valptr(next)) return NULL;
+    if (!next) return NULL;
  }
 
   return lhs;
@@ -82,7 +83,7 @@ ASTExpr *parse_infix(Lexer *lex, Arena *arena, ASTExpr *lhs, int minprec) {
 
 ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
   Token *next = lexer_peek(lex, 1);
-  if (valptr(next))
+  if (!next)
     return NULL;
 
   // hierarchy:
@@ -97,7 +98,7 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
 
     // make a new node containing the unary op
     ASTExpr *expr = aaloc(arena, ASTExpr);
-    if (valptr(expr)) return NULL;
+    if (!expr) return NULL;
     expr->type = AST_EXPR_UNOP;
     expr->val.unop.op = getop(next->lexeme);
     expr->val.unop.isprefix = true;
@@ -114,7 +115,7 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
   ASTExpr *expr = parse_primary(lex, arena);
   if (!expr) return NULL;
   next = lexer_peek(lex, 1);
-  if (valptr(next)) return NULL;
+  if (!next) return NULL;
 
   // while there's still postfix ops...
   while (next->type == TOKEN_OPERATOR && op_ispostfix(getop(next->lexeme))) {
@@ -122,7 +123,7 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
 
     // new node
     ASTExpr *node = aaloc(arena, ASTExpr);
-    if (valptr(node)) return NULL;
+    if (!node) return NULL;
     node->type = AST_EXPR_UNOP;
     node->val.unop.op = getop(next->lexeme);
     node->val.unop.isprefix = false;
@@ -131,15 +132,15 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
 
     // for possible subsequent postfix ops
     next = lexer_peek(lex, 1);
-    if (valptr(next)) return NULL;
+    if (!next) return NULL;
   }
 
   // check ternary
-  if (next->type == TOKEN_OPERATOR && getop(next->lexeme) == OP_QST) {
+  if (cmp_token(next, TOKEN_OPERATOR, "?")) {
     lexer_consume(lex); // consume '?'
 
     ASTExpr *node = aaloc(arena, ASTExpr);
-    if (valptr(node)) return NULL;
+    if (!node) return NULL;
     node->type = AST_EXPR_TERNOP;
     node->val.ternop.op = OP_QST;
     node->val.ternop.lch = expr;
@@ -169,7 +170,7 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
 
 ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
   Token *next = lexer_peek(lex, 1);
-  if (valptr(next))
+  if (!next)
     return NULL;
 
   // identifier token
@@ -182,12 +183,12 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
     ASTExpr *expr = parse_infix(lex, arena, parse_factor(lex, arena), 1);
     if (!expr) return NULL;
     next = lexer_consume(lex);
-    if (valptr(next)) return NULL;
+    if (!next) return NULL;
     if (expect_token(next, TOKEN_BRACKET, ")")) return NULL;
     return parse_secondary(lex, arena, expr);
   }
 
-  print_token(next, "syntax error: unexpected token\n");
+  expect_token(next, -1, NULL);
   return NULL;
 }
 
@@ -195,7 +196,7 @@ ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs) {
   if (!lhs) return NULL;
 
   Token *next = lexer_peek(lex, 1);
-  if (valptr(next))
+  if (!next)
     return NULL;
 
   // check whether this is a member-access or subscript op
@@ -209,7 +210,7 @@ ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs) {
     lexer_consume(lex); // consume '.'
 
     ASTExpr *node = aaloc(arena, ASTExpr);
-    if (valptr(node)) return NULL;
+    if (!node) return NULL;
     node->type = AST_EXPR_BINOP;
     node->val.binop.op = OP_DOT;
     node->val.binop.lhs = lhs;
@@ -222,7 +223,7 @@ ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs) {
     lhs = node;
 
     next = lexer_peek(lex, 1);
-    if (valptr(next)) return NULL;
+    if (!next) return NULL;
   }
 
   // check subscript
@@ -230,7 +231,7 @@ ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs) {
     lexer_consume(lex); // consume '['
 
     ASTExpr *node = aaloc(arena, ASTExpr);
-    if (valptr(node)) return NULL;
+    if (!node) return NULL;
     node->type = AST_EXPR_BINOP;
     node->val.binop.op = OP_SBC;
     node->val.binop.lhs = lhs;
@@ -248,7 +249,7 @@ ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs) {
     lhs = node;
 
     next = lexer_peek(lex, 1);
-    if (valptr(next)) return NULL;
+    if (!next) return NULL;
   }
 
   return parse_secondary(lex, arena, lhs);
