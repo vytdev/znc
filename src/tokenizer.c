@@ -11,6 +11,7 @@ const char *TokenTypeNames[] = {
   [TOKEN_IDENTIFIER] = "identifier",
   [TOKEN_OPERATOR]   = "operator",
   [TOKEN_BRACKET]    = "bracket",
+  [TOKEN_DELIMETER]  = "delimeter",
 };
 
 void lexer_tokenize(Lexer *lex) {
@@ -94,6 +95,15 @@ void lexer_tokenize(Lexer *lex) {
       *lex->lex == '[' || *lex->lex == ']'
     ) {
       tok.type = TOKEN_BRACKET;
+      tok.len = 1;
+      lexer_inc(lex);
+      lexer_emit(lex, &tok);
+      break;
+    }
+
+    // delimeter
+    if (*lex->lex == ';') {
+      tok.type = TOKEN_DELIMETER;
       tok.len = 1;
       lexer_inc(lex);
       lexer_emit(lex, &tok);
