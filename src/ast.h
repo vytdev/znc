@@ -49,6 +49,19 @@ typedef struct ASTExpr {
   ASTExprVal  val;
 } ASTExpr;
 
+typedef enum {
+  AST_STM_EXPR,
+} ASTStmType;
+
+typedef union {
+  ASTExpr *expr;
+} ASTStmVal;
+
+typedef struct ASTStm {
+  ASTStmType type;
+  ASTStmVal  val;
+} ASTStm;
+
 /* process identifiers */
 ASTExpr *parse_identifier(Lexer *lex, Arena *arena);
 
@@ -66,6 +79,9 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena);
 
 /* process secondary (member-access) expressions */
 ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs);
+
+/* process statements */
+ASTStm *parse_statement(Lexer *lex, Arena *arena);
 
 #ifdef _DEBUG
 

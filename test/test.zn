@@ -5,6 +5,6 @@
  * multiple lines!
  */
 
-identifier
-another_id
+identifier;
+another_id;
 

@@ -31,12 +31,8 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  ASTExpr *expr = parse_expr(&lex, arena);
-
-#ifdef _DEBUG
-  if (expr) print_expr(expr);
-  fputc('\n', stdout);
-#endif // _DEBUG
+  // pars! statement
+  ASTStm *stm = parse_statement(&lex, arena);
 
   arena_free(arena);
   lexer_free(&lex);

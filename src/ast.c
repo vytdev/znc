@@ -255,6 +255,28 @@ ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs) {
   return parse_secondary(lex, arena, lhs);
 }
 
+ASTStm *parse_statement(Lexer *lex, Arena *arena) {
+  Token *next = lexer_peek(lex, 1);
+  if (!next) return NULL;
+  ASTStm *stm = aaloc(arena, ASTStm);
+  if (!stm) return NULL;
+
+  // TODO: process other statements here
+
+  // expressions
+  stm->type = AST_STM_EXPR;
+  ASTExpr *expr = parse_expr(lex, arena);
+  if (!expr) return NULL;
+  stm->val.expr = expr;
+
+  // semi-colon
+  next = lexer_consume(lex);
+  if (expect_token(next, TOKEN_DELIMETER, ";"))
+    return NULL;
+
+  return stm;
+}
+
 #ifdef _DEBUG
 void print_expr(ASTExpr *expr) {
   if (!expr) {
