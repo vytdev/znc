@@ -2,14 +2,17 @@
 #define _ZNC_ARENA_H
 #include "types.h"
 
-typedef struct {
-  char *block;
-  uvar alloc;
+#define ARENA_MINSIZE 65536 /* 64kiB */
+
+typedef struct Arena {
+  struct Arena *next;
   uvar used;
+  uvar alloc;
+  char block[];
 } Arena;
 
-/* initialize an arena, returns true if succeded */
-int arena_init(Arena *arena);
+/* initialize an arena block given block size */
+Arena *arena_init(uvar bsize);
 
 /* free arena */
 void arena_free(Arena *arena);

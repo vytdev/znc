@@ -2,46 +2,52 @@
 #include "types.h"
 #include <stdlib.h>
 
-int arena_init(Arena *arena) {
-  if (!arena)
-    return 0;
-  arena->block = (char*)malloc(1024); // 1kiB
-  if (!arena->block)
-    return 0;
-  arena->alloc = 1024;
-  arena->used  = 0;
-  return 1;
+Arena *arena_init(uvar bsize) {
+  if (bsize == 0) return NULL;
+  bsize = bsize > ARENA_MINSIZE ? bsize : ARENA_MINSIZE;
+
+  // allocate arena
+  Arena *arena = (Arena*)malloc(sizeof(Arena) + bsize);
+  if (!arena) return NULL;
+
+  // init fields
+  arena->next = NULL;
+  arena->used = 0;
+  arena->alloc = bsize;
+  return arena;
 }
 
 void arena_free(Arena *arena) {
-  if (!arena)
-    return;
-  if (arena->block)
-    free(arena->block);
-  arena->block = NULL;
+  if (!arena) return;
+  arena_free(arena->next);
+  arena->next = NULL;
+  arena->used = 0;
   arena->alloc = 0;
-  arena->used  = 0;
 }
 
 void *arena_reqm(Arena *arena, uvar size) {
-  if (!arena || !arena->block || arena->alloc == 0)
-    return NULL;
+  if (!arena || size == 0) return NULL;
+  Arena *block, *tail;
 
-  // arena is full
-  if (arena->alloc <= arena->used + size) {
-    uvar newsz = arena->alloc;
-    while (newsz <= arena->used + size)
-      newsz *= 2;
-    char *tmp = (char*)realloc(arena->block, newsz);
-    if (!tmp)
-      return NULL;
-    arena->block = tmp;
-    arena->alloc = newsz;
+  // find a suitable block for this allocation
+  block = arena;
+  while (block && block->alloc < block->used + size) {
+    tail = block;
+    block = block->next;
   }
 
-  // get memory
-  char *curr = &arena->block[arena->used];
-  arena->used += size;
+  // attempt make a new block
+  if (!block) {
+    uvar newsz = tail->alloc;
+    while (newsz < size) newsz *= 2;
+    block = arena_init(newsz);
+    if (!block) return NULL;
+    tail->next = block;
+  }
+
+  // allocate memory
+  char *curr = &block->block[block->used];
+  block->used += size;
   return curr;
 }
 

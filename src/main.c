@@ -25,20 +25,20 @@ int main(int argc, char **argv) {
   }
 
   // init arena
-  Arena arena;
-  if (!arena_init(&arena)) {
+  Arena *arena = arena_init(ARENA_MINSIZE);
+  if (!arena) {
     fprintf(stderr, "znc: failed to init arena\n");
     return 1;
   }
 
-  ASTExpr *expr = parse_expr(&lex, &arena);
+  ASTExpr *expr = parse_expr(&lex, arena);
 
 #ifdef _DEBUG
   if (expr) print_expr(expr);
   fputc('\n', stdout);
 #endif // _DEBUG
 
-  arena_free(&arena);
+  arena_free(arena);
   lexer_free(&lex);
   return 1;
 }
