@@ -5,7 +5,7 @@
 // this value should reflect the highest return
 // value of getprec() function. update this if
 // necessary
-#define OP_HIGHEST_PREC 11
+#define OP_HIGHEST_PREC 10
 
 typedef enum {
   OP_UNK = 0,
@@ -50,6 +50,7 @@ typedef enum {
   OP_GRT,         // >
   OP_DOT,         // .
   // the subscript operator is handled differently
+  OP_SBC,         // [
 } OperatorType;
 
 // operators

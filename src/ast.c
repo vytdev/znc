@@ -135,8 +135,6 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
   }
 
   // check ternary
-  next = lexer_peek(lex, 1);
-  if (valptr(next)) return NULL;
   if (next->type == TOKEN_OPERATOR && getop(next->lexeme) == OP_QST) {
     lexer_consume(lex); // consume '?'
 
@@ -173,24 +171,79 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
   Token *next = lexer_peek(lex, 1);
   if (valptr(next))
     return NULL;
+  ASTExpr *expr = NULL;
 
   // identifier token
   if (next->type == TOKEN_IDENTIFIER)
-    return parse_identifier(lex, arena);
+    expr = parse_identifier(lex, arena);
 
   // expression enclosed with paren
-  if (next->type == TOKEN_BRACKET && *next->lexeme == '(') {
+  else if (next->type == TOKEN_BRACKET && *next->lexeme == '(') {
     lexer_consume(lex);
-    ASTExpr *expr = parse_infix(lex, arena, parse_factor(lex, arena), 1);
+    expr = parse_infix(lex, arena, parse_factor(lex, arena), 1);
     if (!expr) return NULL;
     next = lexer_consume(lex);
     if (valptr(next)) return NULL;
     if (expect_token(next, TOKEN_BRACKET, ")")) return NULL;
-    return expr;
   }
 
-  print_token(next, "syntax error: unexpected token\n");
-  return NULL;
+  else {
+    print_token(next, "syntax error: unexpected token\n");
+    return NULL;
+  }
+
+  // next token
+  next = lexer_peek(lex, 1);
+  if (valptr(next)) return NULL;
+
+  // check member-access
+  while (next->type == TOKEN_OPERATOR && getop(next->lexeme) == OP_DOT) {
+    lexer_consume(lex); // consume '.'
+
+    ASTExpr *node = aaloc(arena, ASTExpr);
+    if (valptr(node)) return NULL;
+    node->type = AST_EXPR_BINOP;
+    node->val.binop.op = OP_DOT;
+    node->val.binop.lhs = expr;
+
+    // the member name
+    ASTExpr *memb = parse_identifier(lex, arena);
+    if (!memb) return NULL;
+    node->val.binop.rhs = memb;
+
+    expr = node;
+
+    next = lexer_peek(lex, 1);
+    if (valptr(next)) return NULL;
+  }
+
+  // check subscript
+  while (next->type == TOKEN_BRACKET && *next->lexeme == '[') {
+    lexer_consume(lex); // consume '['
+
+    ASTExpr *node = aaloc(arena, ASTExpr);
+    if (valptr(node)) return NULL;
+    node->type = AST_EXPR_BINOP;
+    node->val.binop.op = OP_SBC;
+    node->val.binop.lhs = expr;
+
+    // the key
+    ASTExpr *sub = parse_expr(lex, arena);
+    if (!sub) return NULL;
+    node->val.binop.rhs = sub;
+
+    // consume ']'
+    next = lexer_consume(lex);
+    if (expect_token(next, TOKEN_BRACKET, "]"))
+      return NULL;
+
+    expr = node;
+
+    next = lexer_peek(lex, 1);
+    if (valptr(next)) return NULL;
+  }
+
+  return expr;
 }
 
 #ifdef _DEBUG
@@ -200,19 +253,29 @@ void print_expr(ASTExpr *expr) {
     return;
   }
 
-  fputc('(', stdout);
   switch (expr->type) {
     case AST_EXPR_UNOP:
       if (expr->val.unop.isprefix) printf("%s", OperatorNames[expr->val.unop.op]);
+      fputc('(', stdout);
       print_expr(expr->val.unop.val);
+      fputc(')', stdout);
       if (!expr->val.unop.isprefix) printf("%s", OperatorNames[expr->val.unop.op]);
       break;
     case AST_EXPR_BINOP:
+      fputc('(', stdout);
       print_expr(expr->val.binop.lhs);
-      printf(" %s ", OperatorNames[expr->val.binop.op]);
-      print_expr(expr->val.binop.rhs);
+      if (expr->val.binop.op == OP_SBC) {
+        fputc('[', stdout);
+        print_expr(expr->val.binop.rhs);
+        fputc(']', stdout);
+      } else {
+        printf(" %s ", OperatorNames[expr->val.binop.op]);
+        print_expr(expr->val.binop.rhs);
+      }
+      fputc(')', stdout);
       break;
     case AST_EXPR_TERNOP:
+      fputc('(', stdout);
       if (expr->val.ternop.op != OP_QST) {
         printf("null)");
         return;
@@ -222,12 +285,12 @@ void print_expr(ASTExpr *expr) {
       print_expr(expr->val.ternop.mch);
       printf(" : ");
       print_expr(expr->val.ternop.rch);
+      fputc(')', stdout);
       break;
     case AST_EXPR_IDENTIFIER:
       pview(expr->val.ident.name, expr->val.ident.len);
       break;
   }
-  fputc(')', stdout);
 }
 #endif // _DEBUG
 
