@@ -61,6 +61,9 @@ void print_token(Token *tok, const char *msg, ...);
 /* expect a token, returns 0 if succeded, 1 otherwise */
 int expect_token(Token *tok, TokenType type, char *text);
 
+/* compare token to given type and text, returns true if match */
+int cmp_token(Token *tok, TokenType type, char *text);
+
 /* process next tokens */
 void lexer_tokenize(Lexer *lex);
 

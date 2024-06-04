@@ -64,6 +64,9 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena);
 /* process primary (identifiers, literals, etc.) expressions */
 ASTExpr *parse_primary(Lexer *lex, Arena *arena);
 
+/* process secondary (member-access) expressions */
+ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs);
+
 #ifdef _DEBUG
 
 /* print expr */

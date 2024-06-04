@@ -146,7 +146,7 @@ void lexer_seek(Lexer *lex, var offst) {
 }
 
 void print_token(Token *tok, const char *msg, ...) {
-  if (!tok)
+  if (!tok || !msg)
     return;
 
   // message
@@ -203,13 +203,23 @@ void print_token(Token *tok, const char *msg, ...) {
 }
 
 int expect_token(Token *tok, TokenType type, char *text) {
-  if (tok->type != type || (text && strncmp(tok->lexeme, text, tok->len) != 0)) {
-    if (text)
-      print_token(tok, "syntax error: expected '%s'\n", text);
-    else
-      print_token(tok, "syntax error: unexpected token\n");
-    return 1;
-  }
-  return 0;
+  if (cmp_token(tok, type, text))
+    return 0;
+
+  if (text)
+    print_token(tok, "syntax error: expected '%s'\n", text);
+  else
+    print_token(tok, "syntax error: unexpected token\n");
+
+  return 1;
+}
+
+int cmp_token(Token *tok, TokenType type, char *text) {
+  if (!tok)
+    return 0;
+  return tok->type == type && (text
+     ? strncmp(text, tok->lexeme, tok->len) == 0
+     : 1
+  );
 }
 

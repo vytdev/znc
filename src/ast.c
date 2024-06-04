@@ -171,61 +171,69 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
   Token *next = lexer_peek(lex, 1);
   if (valptr(next))
     return NULL;
-  ASTExpr *expr = NULL;
 
   // identifier token
   if (next->type == TOKEN_IDENTIFIER)
-    expr = parse_identifier(lex, arena);
+    return parse_secondary(lex, arena, parse_identifier(lex, arena));
 
   // expression enclosed with paren
-  else if (next->type == TOKEN_BRACKET && *next->lexeme == '(') {
+  if (cmp_token(next, TOKEN_BRACKET, "(")) {
     lexer_consume(lex);
-    expr = parse_infix(lex, arena, parse_factor(lex, arena), 1);
+    ASTExpr *expr = parse_infix(lex, arena, parse_factor(lex, arena), 1);
     if (!expr) return NULL;
     next = lexer_consume(lex);
     if (valptr(next)) return NULL;
     if (expect_token(next, TOKEN_BRACKET, ")")) return NULL;
+    return parse_secondary(lex, arena, expr);
   }
 
-  else {
-    print_token(next, "syntax error: unexpected token\n");
+  print_token(next, "syntax error: unexpected token\n");
+  return NULL;
+}
+
+ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs) {
+  if (!lhs) return NULL;
+
+  Token *next = lexer_peek(lex, 1);
+  if (valptr(next))
     return NULL;
-  }
 
-  // next token
-  next = lexer_peek(lex, 1);
-  if (valptr(next)) return NULL;
+  // check whether this is a member-access or subscript op
+  if (
+    !cmp_token(next, TOKEN_OPERATOR, ".") &&
+    !cmp_token(next, TOKEN_BRACKET, "[")
+  ) return lhs;
 
   // check member-access
-  while (next->type == TOKEN_OPERATOR && getop(next->lexeme) == OP_DOT) {
+  while (cmp_token(next, TOKEN_OPERATOR, ".")) {
     lexer_consume(lex); // consume '.'
 
     ASTExpr *node = aaloc(arena, ASTExpr);
     if (valptr(node)) return NULL;
     node->type = AST_EXPR_BINOP;
     node->val.binop.op = OP_DOT;
-    node->val.binop.lhs = expr;
+    node->val.binop.lhs = lhs;
 
     // the member name
     ASTExpr *memb = parse_identifier(lex, arena);
     if (!memb) return NULL;
     node->val.binop.rhs = memb;
 
-    expr = node;
+    lhs = node;
 
     next = lexer_peek(lex, 1);
     if (valptr(next)) return NULL;
   }
 
   // check subscript
-  while (next->type == TOKEN_BRACKET && *next->lexeme == '[') {
+  while (cmp_token(next, TOKEN_BRACKET, "[")) {
     lexer_consume(lex); // consume '['
 
     ASTExpr *node = aaloc(arena, ASTExpr);
     if (valptr(node)) return NULL;
     node->type = AST_EXPR_BINOP;
     node->val.binop.op = OP_SBC;
-    node->val.binop.lhs = expr;
+    node->val.binop.lhs = lhs;
 
     // the key
     ASTExpr *sub = parse_expr(lex, arena);
@@ -237,13 +245,13 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
     if (expect_token(next, TOKEN_BRACKET, "]"))
       return NULL;
 
-    expr = node;
+    lhs = node;
 
     next = lexer_peek(lex, 1);
     if (valptr(next)) return NULL;
   }
 
-  return expr;
+  return parse_secondary(lex, arena, lhs);
 }
 
 #ifdef _DEBUG
