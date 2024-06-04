@@ -26,6 +26,7 @@ void arena_free(Arena *arena) {
   arena->next = NULL;
   arena->used = 0;
   arena->alloc = 0;
+  free(arena);
 }
 
 void *arena_reqm(Arena *arena, uvar size) {
