@@ -70,12 +70,20 @@ typedef struct ASTExpr {
   ASTExprVal  val;
 } ASTExpr;
 
+typedef struct ASTLet {
+  char *name;
+  uvar nlen;
+  ASTExpr *initval;
+} ASTLet;
+
 typedef enum {
   AST_STM_EXPR,
+  AST_STM_LET,
 } ASTStmType;
 
 typedef union {
   ASTExpr *expr;
+  ASTLet let;
 } ASTStmVal;
 
 typedef struct ASTStm {

@@ -2,6 +2,7 @@
 #include "token.h"
 #include "types.h"
 #include "operator.h"
+#include "keyword.h"
 #include <stdbool.h>
 #include <ctype.h>
 
@@ -10,6 +11,7 @@ const char *TokenTypeNames[] = {
   [TOKEN_ERROR]      = "error",
   [TOKEN_IDENTIFIER] = "identifier",
   [TOKEN_OPERATOR]   = "operator",
+  [TOKEN_KEYWORD]    = "keyword",
   [TOKEN_BRACKET]    = "bracket",
   [TOKEN_DELIMETER]  = "delimeter",
   [TOKEN_STRING]     = "string literal",
@@ -74,6 +76,9 @@ void lexer_tokenize(Lexer *lex) {
         tok.len++;
         lexer_inc(lex);
       }
+      // a keyword!
+      if (iskwd(tok.lexeme) == tok.len)
+        tok.type = TOKEN_KEYWORD;
       lexer_emit(lex, &tok);
       break;
     }

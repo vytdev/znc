@@ -3,6 +3,7 @@
 #include "arena.h"
 #include "token.h"
 #include "operator.h"
+#include "keyword.h"
 #include <stdio.h>
 #include <stdbool.h>
 #ifdef _DEBUG
@@ -337,6 +338,47 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
   if (!next) return NULL;
   ASTStm *stm = aaloc(arena, ASTStm);
   if (!stm) return NULL;
+
+  if (next->type == TOKEN_KEYWORD) {
+    lexer_consume(lex); // consume the keyword
+    KeywordType kwd = getkwd(next->lexeme);
+
+    switch (kwd) {
+      case KWD_LET: {
+        stm->type = AST_STM_LET;
+        // TODO: integrate types
+
+        // get identifier
+        next = lexer_consume(lex);
+        if (!next) return NULL;
+        if (expect_token(next, TOKEN_IDENTIFIER, NULL))
+          return NULL;
+        stm->val.let.name = next->lexeme;
+        stm->val.let.nlen = next->len;
+
+        // check whether there is initial value
+        next = lexer_consume(lex);
+        stm->val.let.initval = NULL;
+
+        if (cmp_token(next, TOKEN_OPERATOR, "=")) {
+          ASTExpr *initval = parse_expr(lex, arena);
+          if (!initval) return NULL;
+          stm->val.let.initval = initval;
+          next = lexer_consume(lex);
+        }
+
+        // expect semi-colon
+        if (expect_token(next, TOKEN_DELIMETER, ";"))
+          return NULL;
+        return stm;
+      }
+
+      // it is impossible to get unknown keyword, but just in-case :)
+      default:
+        print_token(next, "parse error: unknown keyword\n");
+        return NULL;
+    }
+  }
 
   // TODO: process other statements here
 
