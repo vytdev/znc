@@ -190,10 +190,62 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
     return parse_secondary(lex, arena, node);
   }
 
+  // array literals
+  if (cmp_token(next, TOKEN_BRACKET, "[")) {
+    lexer_consume(lex); // consume '['
+    ASTExpr *expr = aaloc(arena, ASTExpr);
+    if (!expr) return NULL;
+    expr->type = AST_EXPR_ARRAY;
+    ASTArray *arr = NULL;
+
+    while (1) {
+      next = lexer_peek(lex, 1);
+      if (!next) return NULL;
+
+      // maybe end?
+      if (cmp_token(next, TOKEN_BRACKET, "]"))
+        break;
+
+      // create a new element
+      ASTArray *newarr = aaloc(arena, ASTArray);
+      if (!newarr) return NULL;
+      if (arr) arr->next = newarr;
+      arr = newarr;
+      arr->expr = NULL;
+      arr->next = NULL;
+      if (!expr->val.arr) expr->val.arr = arr; // first element
+
+      // process expression (minimum precedence 2 to skip comma)
+      ASTExpr *node = parse_infix(lex, arena, parse_factor(lex, arena), 2);
+      if (!node) return NULL;
+      arr->expr = node;
+
+      // expect ']' or ','
+      next = lexer_peek(lex, 1);
+      if (!next) return NULL;
+      if (
+        !cmp_token(next, TOKEN_BRACKET, "]") &&
+        !cmp_token(next, TOKEN_OPERATOR, ",")
+      ) {
+        print_token(next, "syntax error: expected either of ']' and ','\n");
+        return NULL;
+      }
+
+      // consume if this is a comma
+      if (cmp_token(next, TOKEN_OPERATOR, ","))
+        lexer_consume(lex);
+    }
+
+    // end ']'
+    next = lexer_consume(lex);
+    if (expect_token(next, TOKEN_BRACKET, "]")) return NULL;
+    return parse_secondary(lex, arena, expr);
+  }
+
   // expression enclosed with paren
   if (cmp_token(next, TOKEN_BRACKET, "(")) {
     lexer_consume(lex);
-    ASTExpr *expr = parse_infix(lex, arena, parse_factor(lex, arena), 1);
+    ASTExpr *expr = parse_expr(lex, arena);
     if (!expr) return NULL;
     next = lexer_consume(lex);
     if (!next) return NULL;
