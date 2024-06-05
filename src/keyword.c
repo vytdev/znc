@@ -6,6 +6,7 @@ const char *KeywordNames[] = {
   // should be ordered from longest string to shortest
   [KWD_UNK]             = "<unknown>",
 
+  "while",
   "else",
   "let",
   "if",

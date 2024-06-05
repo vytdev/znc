@@ -76,22 +76,29 @@ typedef struct ASTLet {
   ASTExpr *initval;
 } ASTLet;
 
-typedef struct ASTIf {
+typedef struct ASTIfElse {
   ASTExpr *cond;
   struct ASTStm *code;
   struct ASTStm *elsec;
 } ASTIfElse;
 
+typedef struct ASTWhile {
+  ASTExpr *cond;
+  struct ASTStm *code;
+} ASTWhile;
+
 typedef enum {
   AST_STM_EXPR,
   AST_STM_LET,
   AST_STM_IFELSE,
+  AST_STM_WHILE,
 } ASTStmType;
 
 typedef union {
   ASTExpr *expr;
   ASTLet let;
   ASTIfElse ifels;
+  ASTWhile whil;
 } ASTStmVal;
 
 typedef struct ASTStm {

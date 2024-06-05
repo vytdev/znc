@@ -4,6 +4,7 @@
 
 typedef enum {
   KWD_UNK = 0,
+  KWD_WHILE,
   KWD_ELSE,
   KWD_LET,
   KWD_IF,

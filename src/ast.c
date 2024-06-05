@@ -413,6 +413,33 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
         return stm;
       }
 
+      case KWD_WHILE: {
+        stm->type = AST_STM_WHILE;
+
+        // expect condition opening '('
+        next = lexer_consume(lex);
+        if (!next) return NULL;
+        if (expect_token(next, TOKEN_BRACKET, "("))
+          return NULL;
+
+        ASTExpr *cond = parse_expr(lex, arena);
+        if (!cond) return NULL;
+        stm->val.whil.cond = cond;
+
+        // expect condition closing ')'
+        next = lexer_consume(lex);
+        if (!next) return NULL;
+        if (expect_token(next, TOKEN_BRACKET, ")"))
+          return NULL;
+
+        // code to execute
+        ASTStm *code = parse_statement(lex, arena);
+        if (!code) return NULL;
+        stm->val.whil.code = code;
+
+        return stm;
+      }
+
       // it is impossible to get unknown keyword, but just in-case :)
       default:
         print_token(next, "parse error: unknown keyword\n");
