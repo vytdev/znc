@@ -28,11 +28,14 @@ int main(int argc, char **argv) {
   Arena *arena = arena_init(ARENA_MINSIZE);
   if (!arena) {
     fprintf(stderr, "znc: failed to init arena\n");
+    lexer_free(&lex);
     return 1;
   }
 
-  // pars! statement
-  ASTStm *stm = parse_statement(&lex, arena);
+  // parse blocks
+  ASTBlock *blck = parse_block(&lex, arena);
+  if (!blck)
+    fprintf(stderr, "znc: aborting due to error\n");
 
   arena_free(arena);
   lexer_free(&lex);

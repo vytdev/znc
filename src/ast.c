@@ -338,6 +338,7 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
   if (!next) return NULL;
   ASTStm *stm = aaloc(arena, ASTStm);
   if (!stm) return NULL;
+  stm->next = NULL; // used on blocks
 
   if (next->type == TOKEN_KEYWORD) {
     lexer_consume(lex); // consume the keyword
@@ -413,6 +414,11 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
         return stm;
       }
 
+      case KWD_ELSE: {
+        print_token(next, "syntax error: the 'else' statement must be preceded by an 'if' statement\n");
+        return NULL;
+      }
+
       case KWD_WHILE: {
         stm->type = AST_STM_WHILE;
 
@@ -447,7 +453,14 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
     }
   }
 
-  // TODO: process other statements here
+  // blocks
+  if (cmp_token(next, TOKEN_BRACKET, "{")) {
+    stm->type = AST_STM_BLOCK;
+    ASTBlock *block = parse_block(lex, arena);
+    if (!block) return NULL;
+    stm->val.blck = block;
+    return stm;
+  }
 
   // expressions
   stm->type = AST_STM_EXPR;
@@ -462,6 +475,50 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
     return NULL;
 
   return stm;
+}
+
+ASTBlock *parse_block(Lexer *lex, Arena *arena) {
+  Token *next = NULL;
+
+  // expect block opening '{'
+  next = lexer_consume(lex);
+  if (!next) return NULL;
+  if (expect_token(next, TOKEN_BRACKET, "{"))
+    return NULL;
+
+  // initialize node
+  ASTBlock *node = aaloc(arena, ASTBlock);
+  if (!node) return NULL;
+  ASTStm *head = NULL;
+  ASTStm *tail = NULL;
+
+  // process until closing bracket '}'
+  next = lexer_peek(lex, 1);
+  if (!next) return NULL;
+  while (!cmp_token(next, TOKEN_BRACKET, "}") && !lex->eof) {
+    ASTStm *stm = parse_statement(lex, arena);
+    if (!stm) return NULL;
+
+    // update head and tail pointers
+    if (!head) head = stm;
+    if (tail) tail->next = stm;
+    tail = stm;
+
+    next = lexer_peek(lex, 1);
+    if (!next) return NULL;
+  }
+
+  // set pointers
+  node->head = head;
+  node->tail = tail;
+
+  // expect block closing '}'
+  next = lexer_consume(lex);
+  if (!next) return NULL;
+  if (expect_token(next, TOKEN_BRACKET, "}"))
+    return NULL;
+
+  return node;
 }
 
 #ifdef _DEBUG

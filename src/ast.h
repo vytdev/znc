@@ -92,6 +92,7 @@ typedef enum {
   AST_STM_LET,
   AST_STM_IFELSE,
   AST_STM_WHILE,
+  AST_STM_BLOCK,
 } ASTStmType;
 
 typedef union {
@@ -99,12 +100,19 @@ typedef union {
   ASTLet let;
   ASTIfElse ifels;
   ASTWhile whil;
+  struct ASTBlock *blck;
 } ASTStmVal;
 
 typedef struct ASTStm {
+  struct ASTStm *next; // used on ast blocks
   ASTStmType type;
   ASTStmVal  val;
 } ASTStm;
+
+typedef struct ASTBlock {
+  ASTStm *head;
+  ASTStm *tail;
+} ASTBlock;
 
 /* process identifiers */
 ASTExpr *parse_identifier(Lexer *lex, Arena *arena);
@@ -126,6 +134,9 @@ ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs);
 
 /* process statements */
 ASTStm *parse_statement(Lexer *lex, Arena *arena);
+
+/* process code blocks */
+ASTBlock *parse_block(Lexer *lex, Arena *arena);
 
 #ifdef _DEBUG
 
