@@ -4,6 +4,7 @@
 #include "token.h"
 #include "operator.h"
 #include "keyword.h"
+#include "tsys.h"
 #include <stdio.h>
 #include <stdbool.h>
 #ifdef _DEBUG
@@ -347,7 +348,11 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
     switch (kwd) {
       case KWD_LET: {
         stm->type = AST_STM_LET;
-        // TODO: integrate types
+
+        // process type
+        ASTTypeRef *type = parse_typeref(lex, arena);
+        if (!type) return NULL;
+        stm->val.let.type = type;
 
         // get identifier
         next = lexer_consume(lex);
@@ -446,8 +451,14 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
         return stm;
       }
 
-      // it is impossible to get unknown keyword, but just in-case :)
       default:
+        // primitive type keyword
+        if (iskwdprim(kwd)) {
+          expect_token(next, -1, NULL);
+          return NULL;
+        }
+
+        // it is impossible to get unknown keyword, but just in-case :)
         print_token(next, "parse error: unknown keyword\n");
         return NULL;
     }
@@ -517,6 +528,49 @@ ASTBlock *parse_block(Lexer *lex, Arena *arena) {
   if (!next) return NULL;
   if (expect_token(next, TOKEN_BRACKET, "}"))
     return NULL;
+
+  return node;
+}
+
+ASTTypeRef *parse_typeref(Lexer *lex, Arena *arena) {
+  ASTTypeRef *node = aaloc(arena, ASTTypeRef);
+  if (!node) return NULL;
+  Token *next = lexer_consume(lex);
+  if (!next) return NULL;
+
+  // a primitive type
+  if (next->type == TOKEN_KEYWORD && iskwdprim(getkwd(next->lexeme))) {
+    node->type = AST_TYPE_PRIMITIVE;
+    node->val.type = kwdtoprim(getkwd(next->lexeme));
+  }
+
+  // unknown type token
+  else {
+    expect_token(next, -1, NULL);
+    return NULL;
+  }
+
+  // process array types
+  next = lexer_peek(lex, 1);
+  if (!next) return NULL;
+  while (cmp_token(next, TOKEN_BRACKET, "[")) {
+    lexer_consume(lex); // consume '['
+
+    // expect ']'
+    next = lexer_consume(lex);
+    if (!next) return NULL;
+    if (expect_token(next, TOKEN_BRACKET, "]"))
+      return NULL;
+
+    ASTTypeRef *ref = aaloc(arena, ASTTypeRef);
+    if (!ref) return NULL;
+    ref->type = AST_TYPE_ARRAY;
+    ref->val.aelem = node;
+    node = ref;
+
+    next = lexer_peek(lex, 1);
+    if (!next) return NULL;
+  }
 
   return node;
 }

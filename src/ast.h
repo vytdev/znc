@@ -4,6 +4,7 @@
 #include "lexer.h"
 #include "arena.h"
 #include "operator.h"
+#include "tsys.h"
 #include <stdbool.h>
 
 typedef struct ASTIdentifier {
@@ -74,6 +75,7 @@ typedef struct ASTLet {
   char *name;
   uvar nlen;
   ASTExpr *initval;
+  struct ASTTypeRef *type;
 } ASTLet;
 
 typedef struct ASTIfElse {
@@ -114,6 +116,21 @@ typedef struct ASTBlock {
   ASTStm *tail;
 } ASTBlock;
 
+typedef enum {
+  AST_TYPE_PRIMITIVE,
+  AST_TYPE_ARRAY,
+} ASTTypeType;
+
+typedef union {
+  PrimitiveType type;
+  struct ASTTypeRef *aelem;
+} ASTTypeVal;
+
+typedef struct ASTTypeRef {
+  ASTTypeType type;
+  ASTTypeVal  val;
+} ASTTypeRef;
+
 /* process identifiers */
 ASTExpr *parse_identifier(Lexer *lex, Arena *arena);
 
@@ -137,6 +154,9 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena);
 
 /* process code blocks */
 ASTBlock *parse_block(Lexer *lex, Arena *arena);
+
+/* process type references */
+ASTTypeRef *parse_typeref(Lexer *lex, Arena *arena);
 
 #ifdef _DEBUG
 

@@ -4,10 +4,24 @@
 
 typedef enum {
   KWD_UNK = 0,
-  KWD_WHILE,
-  KWD_ELSE,
+
   KWD_LET,
   KWD_IF,
+  KWD_ELSE,
+  KWD_WHILE,
+
+  KWD_BYTE,
+  KWD_SHORT,
+  KWD_INT,
+  KWD_LONG,
+  KWD_UBYTE,
+  KWD_USHORT,
+  KWD_UINT,
+  KWD_ULONG,
+  KWD_FLOAT,
+  KWD_DOUBLE,
+  KWD_CHAR,
+  KWD_BOOL,
 } KeywordType;
 
 // keywords
@@ -18,6 +32,9 @@ uvar iskwd(char *text);
 
 /* get the keyword type from given string */
 KeywordType getkwd(char *text);
+
+/* returns whether the keyword is a primitive type */
+int iskwdprim(KeywordType kwd);
 
 #endif // _ZNC_KEYWORD_H
 

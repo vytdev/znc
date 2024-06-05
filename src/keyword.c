@@ -3,13 +3,16 @@
 #include <string.h>
 
 const char *KeywordNames[] = {
-  // should be ordered from longest string to shortest
   [KWD_UNK]             = "<unknown>",
 
-  "while",
-  "else",
   "let",
   "if",
+  "else",
+  "while",
+
+  "byte", "short", "int", "long",
+  "ubyte", "ushort", "uint", "ulong",
+  "float", "double", "char", "bool",
 };
 
 uvar iskwd(char *text) {
@@ -26,5 +29,9 @@ KeywordType getkwd(char *text) {
     if (strncmp(text, KeywordNames[i], strlen(KeywordNames[i])) == 0)
       return i;
   return KWD_UNK;
+}
+
+int iskwdprim(KeywordType kwd) {
+  return KWD_BYTE <= kwd && KWD_BOOL >= kwd;
 }
 
