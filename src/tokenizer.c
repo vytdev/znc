@@ -12,6 +12,7 @@ const char *TokenTypeNames[] = {
   [TOKEN_OPERATOR]   = "operator",
   [TOKEN_BRACKET]    = "bracket",
   [TOKEN_DELIMETER]  = "delimeter",
+  [TOKEN_STRING]     = "string literal",
 };
 
 void lexer_tokenize(Lexer *lex) {
@@ -106,6 +107,47 @@ void lexer_tokenize(Lexer *lex) {
       tok.type = TOKEN_DELIMETER;
       tok.len = 1;
       lexer_inc(lex);
+      lexer_emit(lex, &tok);
+      break;
+    }
+
+    // string literal
+    if (*lex->lex == '"') {
+      tok.type = TOKEN_STRING;
+      lexer_inc(lex);
+      tok.len++;
+      bool escape = false;
+
+      // iterate until the end of the string
+      while (
+        (escape || *lex->lex != '"') &&
+        *lex->lex != '\n' &&
+        *lex->lex != '\r' &&
+        *lex->lex != '\0'
+      ) {
+
+        // escapes (they will be validated at codegen)
+        if (escape)
+          escape = false;
+        else if (*lex->lex == '\\')
+          escape = true;
+
+        tok.len++;
+        lexer_inc(lex);
+      }
+
+      // check the closing quote
+      if (*lex->lex != '"') {
+        print_token(&tok, "syntax error: unterminated string literal\n");
+        tok.type = TOKEN_ERROR;
+        lexer_emit(lex, &tok);
+        lex->eof = true;
+        break;
+      }
+
+      // for the closing quote
+      lexer_inc(lex);
+      tok.len++;
       lexer_emit(lex, &tok);
       break;
     }

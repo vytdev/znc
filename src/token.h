@@ -10,6 +10,7 @@ typedef enum {
   TOKEN_OPERATOR,
   TOKEN_BRACKET,
   TOKEN_DELIMETER,
+  TOKEN_STRING,
 } TokenType;
 
 // token type names

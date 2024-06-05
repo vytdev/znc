@@ -11,6 +11,11 @@ typedef struct ASTIdentifier {
   uvar len;             /* length of the text */
 } ASTIdentifier;
 
+typedef struct ASTString {
+  char *raw;
+  uvar len;
+} ASTString;
+
 typedef struct ASTUnaryOp {
   struct ASTExpr *val;
   bool isprefix;
@@ -32,6 +37,7 @@ typedef struct ASTTernaryOp {
 
 typedef enum {
   AST_EXPR_IDENTIFIER,
+  AST_EXPR_STRING,
   AST_EXPR_UNOP,
   AST_EXPR_BINOP,
   AST_EXPR_TERNOP,
@@ -39,6 +45,7 @@ typedef enum {
 
 typedef union {
   ASTIdentifier ident;
+  ASTString str;
   ASTUnaryOp unop;
   ASTBinaryOp binop;
   ASTTernaryOp ternop;

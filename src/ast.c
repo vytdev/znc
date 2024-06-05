@@ -179,6 +179,17 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
   if (next->type == TOKEN_IDENTIFIER)
     return parse_secondary(lex, arena, parse_identifier(lex, arena));
 
+  // string token
+  if (next->type == TOKEN_STRING) {
+    lexer_consume(lex);
+    ASTExpr *node = aaloc(arena, ASTExpr);
+    if (!node) return NULL;
+    node->type = AST_EXPR_STRING;
+    node->val.str.raw = next->lexeme;
+    node->val.str.len = next->len;
+    return parse_secondary(lex, arena, node);
+  }
+
   // expression enclosed with paren
   if (cmp_token(next, TOKEN_BRACKET, "(")) {
     lexer_consume(lex);
