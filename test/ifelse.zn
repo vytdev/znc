@@ -1,0 +1,8 @@
+if (a > b)
+  if (a == 1)
+    b++;
+else if (a < b)
+  doSomeStuff;
+else
+  finalCond;
+

@@ -358,6 +358,7 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
 
         // check whether there is initial value
         next = lexer_consume(lex);
+        if (!next) return NULL;
         stm->val.let.initval = NULL;
 
         if (cmp_token(next, TOKEN_OPERATOR, "=")) {
@@ -365,11 +366,50 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
           if (!initval) return NULL;
           stm->val.let.initval = initval;
           next = lexer_consume(lex);
+          if (!next) return NULL;
         }
 
         // expect semi-colon
         if (expect_token(next, TOKEN_DELIMETER, ";"))
           return NULL;
+        return stm;
+      }
+
+      case KWD_IF: {
+        stm->type = AST_STM_IFELSE;
+
+        // expect condition opening '('
+        next = lexer_consume(lex);
+        if (!next) return NULL;
+        if (expect_token(next, TOKEN_BRACKET, "("))
+          return NULL;
+
+        ASTExpr *cond = parse_expr(lex, arena);
+        if (!cond) return NULL;
+        stm->val.ifels.cond = cond;
+
+        // expect condition closing ')'
+        next = lexer_consume(lex);
+        if (!next) return NULL;
+        if (expect_token(next, TOKEN_BRACKET, ")"))
+          return NULL;
+
+        // now the code to execute
+        ASTStm *code = parse_statement(lex, arena);
+        if (!code) return NULL;
+        stm->val.ifels.code = code;
+
+        // the else statement
+        stm->val.ifels.elsec = NULL;
+        next = lexer_peek(lex, 1);
+        if (!next) return NULL;
+        if (cmp_token(next, TOKEN_KEYWORD, "else")) {
+          lexer_consume(lex); // consume 'else'
+          ASTStm *elsec = parse_statement(lex, arena);
+          if (!elsec) return NULL;
+          stm->val.ifels.elsec = elsec;
+        }
+
         return stm;
       }
 

@@ -4,7 +4,9 @@
 
 typedef enum {
   KWD_UNK = 0,
+  KWD_ELSE,
   KWD_LET,
+  KWD_IF,
 } KeywordType;
 
 // keywords

@@ -6,7 +6,9 @@ const char *KeywordNames[] = {
   // should be ordered from longest string to shortest
   [KWD_UNK]             = "<unknown>",
 
+  "else",
   "let",
+  "if",
 };
 
 uvar iskwd(char *text) {
