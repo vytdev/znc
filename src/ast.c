@@ -242,6 +242,17 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
     return parse_secondary(lex, arena, expr);
   }
 
+  // integers
+  if (cmp_token(next, TOKEN_INTEGER, NULL)) {
+    lexer_consume(lex); // consume the int
+    ASTExpr *val = aaloc(arena, ASTExpr);
+    if (!val) return NULL;
+    val->type = AST_EXPR_INTEGER;
+    val->val.intg.text = next->lexeme;
+    val->val.intg.len = next->len;
+    return parse_secondary(lex, arena, val);
+  }
+
   // expression enclosed with paren
   if (cmp_token(next, TOKEN_BRACKET, "(")) {
     lexer_consume(lex);

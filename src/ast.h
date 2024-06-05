@@ -21,6 +21,11 @@ typedef struct ASTArray {
   struct ASTArray *next;
 } ASTArray;
 
+typedef struct ASTInteger {
+  char *text;
+  uvar len;
+} ASTInteger;
+
 typedef struct ASTUnaryOp {
   struct ASTExpr *val;
   bool isprefix;
@@ -44,6 +49,7 @@ typedef enum {
   AST_EXPR_IDENTIFIER,
   AST_EXPR_STRING,
   AST_EXPR_ARRAY,
+  AST_EXPR_INTEGER,
   AST_EXPR_UNOP,
   AST_EXPR_BINOP,
   AST_EXPR_TERNOP,
@@ -53,6 +59,7 @@ typedef union {
   ASTIdentifier ident;
   ASTString str;
   ASTArray *arr;
+  ASTInteger intg;
   ASTUnaryOp unop;
   ASTBinaryOp binop;
   ASTTernaryOp ternop;

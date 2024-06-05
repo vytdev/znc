@@ -13,6 +13,7 @@ const char *TokenTypeNames[] = {
   [TOKEN_BRACKET]    = "bracket",
   [TOKEN_DELIMETER]  = "delimeter",
   [TOKEN_STRING]     = "string literal",
+  [TOKEN_INTEGER]    = "integer literal",
 };
 
 void lexer_tokenize(Lexer *lex) {
@@ -148,6 +149,17 @@ void lexer_tokenize(Lexer *lex) {
       // for the closing quote
       lexer_inc(lex);
       tok.len++;
+      lexer_emit(lex, &tok);
+      break;
+    }
+
+    // integer literal
+    if (isdigit(*lex->lex)) {
+      tok.type = TOKEN_INTEGER;
+      while (isdigit(*lex->lex) || *lex->lex == '_') {
+        tok.len++;
+        lexer_inc(lex);
+      }
       lexer_emit(lex, &tok);
       break;
     }

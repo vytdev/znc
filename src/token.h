@@ -11,6 +11,7 @@ typedef enum {
   TOKEN_BRACKET,
   TOKEN_DELIMETER,
   TOKEN_STRING,
+  TOKEN_INTEGER,
 } TokenType;
 
 // token type names
