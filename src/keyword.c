@@ -12,6 +12,7 @@ const char *KeywordNames[] = {
   "return",
 
   "function",
+  "enum",
 
   "byte", "short", "int", "long",
   "ubyte", "ushort", "uint", "ulong",

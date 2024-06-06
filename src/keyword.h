@@ -12,6 +12,7 @@ typedef enum {
   KWD_RETURN,
 
   KWD_FUNCTION,
+  KWD_ENUM,
 
   KWD_BYTE,
   KWD_SHORT,

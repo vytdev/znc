@@ -1,0 +1,6 @@
+enum MyEnum {
+  CONST1 = 123,
+  CONST2 = 456,
+  CONST3 = 789,
+}
+

@@ -689,6 +689,104 @@ ASTFuncDef *parse_funcdef(Lexer *lex, Arena *arena) {
   return fn;
 }
 
+ASTEnum *parse_enum(Lexer *lex, Arena *arena) {
+  ASTEnum *enode = aaloc(arena, ASTEnum);
+  if (!enode) return NULL;
+  enode->head = NULL;
+  enode->tail = NULL;
+  enode->type = NULL;
+  Token *next = lexer_consume(lex);
+  if (!next) return NULL;
+
+  // expect 'enum'
+  if (expect_token(next, TOKEN_KEYWORD, "enum"))
+    return NULL;
+
+  // get enum id
+  next = lexer_consume(lex);
+  if (!next) return NULL;
+  if (expect_token(next, TOKEN_IDENTIFIER, NULL))
+    return NULL;
+  enode->name = next->lexeme;
+  enode->nlen = next->len;
+
+  // type or definition
+  next = lexer_peek(lex, 1);
+  if (!next) return NULL;
+
+  // type found
+  if (!cmp_token(next, TOKEN_BRACKET, "{")) {
+    ASTTypeRef *type = parse_typeref(lex, arena);
+    if (!type) return NULL;
+    enode->type = type;
+    next = lexer_peek(lex, 1);
+    if (!next) return NULL;
+  }
+
+  // definition of the enum
+  if (expect_token(next, TOKEN_BRACKET, "{"))
+    return NULL;
+  lexer_consume(lex); // consume '{'
+  next = lexer_peek(lex, 1);
+  if (!next) return NULL;
+
+  ASTEnumEntry *curr = NULL;
+  while (!cmp_token(next, TOKEN_BRACKET, "}")) {
+    ASTEnumEntry *ent = aaloc(arena, ASTEnumEntry);
+    if (!ent) return NULL;
+    ent->next = NULL;
+    ent->cnst = NULL;
+
+    if (curr) curr->next = ent;
+    else enode->head = ent;
+    curr = ent;
+
+    // get enum name
+    next = lexer_consume(lex);
+    if (!next) return NULL;
+    if (expect_token(next, TOKEN_IDENTIFIER, NULL))
+      return NULL;
+    ent->name = next->lexeme;
+    ent->nlen = next->len;
+
+    // process constant value
+    next = lexer_peek(lex, 1);
+    if (!next) return NULL;
+    if (cmp_token(next, TOKEN_OPERATOR, "=")) {
+      lexer_consume(lex); // consume '='
+      // parse expression, min prec 2 to exclude comma
+      ASTExpr *cnst = parse_infix(lex, arena, parse_factor(lex, arena), 2);
+      if (!cnst) return NULL;
+      ent->cnst = cnst;
+      next = lexer_peek(lex, 1);
+      if (!next) return NULL;
+    }
+
+    // if there's no comma, it is the last element
+    if (!cmp_token(next, TOKEN_OPERATOR, ","))
+      break;
+
+    lexer_consume(lex); // consume ','
+    next = lexer_peek(lex, 1);
+    if (!next) return NULL;
+  }
+  enode->tail = curr;
+
+  // no enum entry was processed
+  if (!curr) {
+    print_token(next, "syntax error: empty enum definition not allowed\n");
+    return NULL;
+  }
+
+  // expect closing '}'
+  next = lexer_consume(lex);
+  if (!next) return NULL;
+  if (expect_token(next, TOKEN_BRACKET, "}"))
+    return NULL;
+
+  return enode;
+}
+
 ASTTypeRef *parse_typeref(Lexer *lex, Arena *arena) {
   ASTTypeRef *node = aaloc(arena, ASTTypeRef);
   if (!node) return NULL;
