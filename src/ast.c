@@ -277,10 +277,12 @@ ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs) {
   if (!next)
     return NULL;
 
-  // check whether this is a member-access or subscript op
+  // check whether this is a member-access or subscript op,
+  // or a function call
   if (
     !cmp_token(next, TOKEN_OPERATOR, ".") &&
-    !cmp_token(next, TOKEN_BRACKET, "[")
+    !cmp_token(next, TOKEN_BRACKET, "[") &&
+    !cmp_token(next, TOKEN_BRACKET, "(")
   ) return lhs;
 
   // check member-access
@@ -323,6 +325,85 @@ ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs) {
     next = lexer_consume(lex);
     if (!next) return NULL;
     if (expect_token(next, TOKEN_BRACKET, "]"))
+      return NULL;
+
+    lhs = node;
+
+    next = lexer_peek(lex, 1);
+    if (!next) return NULL;
+  }
+
+  // check function calls
+  while (cmp_token(next, TOKEN_BRACKET, "(")) {
+    lexer_consume(lex); // consume '('
+
+    ASTExpr *node = aaloc(arena, ASTExpr);
+    if (!node) return NULL;
+    node->type = AST_EXPR_CALL;
+    node->val.fcall.fname = lhs;
+    ASTFuncArg *curr = NULL;
+
+    next = lexer_peek(lex, 1);
+    if (!next) return NULL;
+
+    // the args
+    while (!cmp_token(next, TOKEN_BRACKET, ")")) {
+      // initialize arg
+      ASTFuncArg *arg = aaloc(arena, ASTFuncArg);
+      if (!arg) return NULL;
+      arg->target = NULL;
+      arg->tlen = 0;
+
+      // kwarg?
+      if (
+        cmp_token(next, TOKEN_IDENTIFIER, NULL) &&
+        cmp_token(lexer_peek(lex, 2), TOKEN_OPERATOR, "=") &&
+        lexer_peek(lex, 2)->pos == next->pos + next->len
+        // the id should be close to the equal sign to consider it as a kwarg
+      ) {
+        lexer_consume(lex); // consume id
+        lexer_consume(lex); // consume '='
+        arg->target = next->lexeme;
+        arg->tlen = next->len;
+      }
+
+      // process arg expression
+      ASTExpr *val = parse_infix(lex, arena, parse_factor(lex, arena), 2);
+      if (!val) return NULL;
+      arg->val = val;
+
+      if (curr) curr->next = arg;
+      else node->val.fcall.args = arg;
+      curr = arg;
+
+      // peek next token
+      next = lexer_peek(lex, 1);
+      if (!next) return NULL;
+
+      // next arg
+      if (cmp_token(next, TOKEN_OPERATOR, ",")) {
+        lexer_consume(lex);
+        next = lexer_peek(lex, 1);
+        if (!next) return NULL;
+
+        // ')' after ',' ??
+        if (cmp_token(next, TOKEN_BRACKET, ")")) {
+          expect_token(next, -1, NULL);
+          return NULL;
+        }
+
+        continue;
+      }
+
+      // found end
+      if (cmp_token(next, TOKEN_BRACKET, ")"))
+        break;
+    }
+
+    // consume ')'
+    next = lexer_consume(lex);
+    if (!next) return NULL;
+    if (expect_token(next, TOKEN_BRACKET, ")"))
       return NULL;
 
     lhs = node;

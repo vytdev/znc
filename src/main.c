@@ -32,9 +32,9 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // parse enum
-  ASTEnum *enode = parse_enum(&lex, arena);
-  if (!enode)
+  // parse expr
+  ASTExpr *node = parse_expr(&lex, arena);
+  if (!node)
     fprintf(stderr, "znc: aborting due to error\n");
 
   arena_free(arena);

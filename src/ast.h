@@ -46,6 +46,18 @@ typedef struct ASTTernaryOp {
   OperatorType op;
 } ASTTernaryOp;
 
+typedef struct ASTFuncArg {
+  struct ASTFuncArg *next;
+  char *target;
+  uvar tlen;
+  struct ASTExpr *val;
+} ASTFuncArg;
+
+typedef struct ASTFuncCall {
+  struct ASTExpr *fname;
+  ASTFuncArg *args;
+} ASTFuncCall;
+
 typedef enum {
   AST_EXPR_IDENTIFIER,
   AST_EXPR_STRING,
@@ -54,6 +66,7 @@ typedef enum {
   AST_EXPR_UNOP,
   AST_EXPR_BINOP,
   AST_EXPR_TERNOP,
+  AST_EXPR_CALL,
 } ASTExprType;
 
 typedef union {
@@ -64,6 +77,7 @@ typedef union {
   ASTUnaryOp unop;
   ASTBinaryOp binop;
   ASTTernaryOp ternop;
+  ASTFuncCall fcall;
 } ASTExprVal;
 
 typedef struct ASTExpr {

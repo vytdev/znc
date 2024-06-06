@@ -1,0 +1,7 @@
+/*
+ * a(1, b = 1)     sets value of b in current scope
+ * a(1, b= 1)      b is a kwarg
+ * space matters...
+ */
+a(1, b= 1)
+
