@@ -94,6 +94,7 @@ typedef enum {
   AST_STM_LET,
   AST_STM_IFELSE,
   AST_STM_WHILE,
+  AST_STM_RETURN,
   AST_STM_BLOCK,
 } ASTStmType;
 
@@ -102,6 +103,7 @@ typedef union {
   ASTLet let;
   ASTIfElse ifels;
   ASTWhile whil;
+  ASTExpr *retval;
   struct ASTBlock *blck;
 } ASTStmVal;
 
@@ -115,6 +117,23 @@ typedef struct ASTBlock {
   ASTStm *head;
   ASTStm *tail;
 } ASTBlock;
+
+typedef struct ASTFuncArgDef {
+  struct ASTFuncArgDef *next;
+  struct ASTTypeRef *type;
+  char *name;
+  uvar nlen;
+  ASTExpr *defval;
+  bool restarr;         // ...
+} ASTFuncArgDef;
+
+typedef struct ASTFuncDef {
+  char *name;
+  uvar nlen;
+  ASTFuncArgDef *args;
+  struct ASTTypeRef *rettype;
+  ASTBlock *code;
+} ASTFuncDef;
 
 typedef enum {
   AST_TYPE_PRIMITIVE,
@@ -154,6 +173,9 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena);
 
 /* process code blocks */
 ASTBlock *parse_block(Lexer *lex, Arena *arena);
+
+/* process function definitions */
+ASTFuncDef *parse_funcdef(Lexer *lex, Arena *arena);
 
 /* process type references */
 ASTTypeRef *parse_typeref(Lexer *lex, Arena *arena);

@@ -9,6 +9,9 @@ typedef enum {
   KWD_IF,
   KWD_ELSE,
   KWD_WHILE,
+  KWD_RETURN,
+
+  KWD_FUNCTION,
 
   KWD_BYTE,
   KWD_SHORT,

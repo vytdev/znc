@@ -9,6 +9,7 @@
 
 typedef enum {
   OP_UNK = 0,
+  OP_TRP_DOT,     // ...
   OP_DBL_AMP_EQL, // &&=
   OP_DBL_BAR_EQL, // ||=
   OP_DBL_LES_EQL, // <<=

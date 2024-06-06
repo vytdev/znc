@@ -9,6 +9,9 @@ const char *KeywordNames[] = {
   "if",
   "else",
   "while",
+  "return",
+
+  "function",
 
   "byte", "short", "int", "long",
   "ubyte", "ushort", "uint", "ulong",

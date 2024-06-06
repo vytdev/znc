@@ -32,9 +32,9 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // parse blocks
-  ASTBlock *blck = parse_block(&lex, arena);
-  if (!blck)
+  // parse func defs
+  ASTFuncDef *fn = parse_funcdef(&lex, arena);
+  if (!fn)
     fprintf(stderr, "znc: aborting due to error\n");
 
   arena_free(arena);

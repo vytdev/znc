@@ -451,6 +451,28 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
         return stm;
       }
 
+      case KWD_RETURN: {
+        stm->type = AST_STM_RETURN;
+        stm->val.retval = NULL;
+
+        // check whether there's return value
+        next = lexer_peek(lex, 1);
+        if (!next) return NULL;
+        if (!cmp_token(next, TOKEN_DELIMETER, ";")) {
+          ASTExpr *retval = parse_expr(lex, arena);
+          if (!retval) return NULL;
+          stm->val.retval = retval;
+        }
+
+        // expect delimeter
+        next = lexer_consume(lex);
+        if (!next) return NULL;
+        if (expect_token(next, TOKEN_DELIMETER, ";"))
+          return NULL;
+
+        return stm;
+      }
+
       default:
         // primitive type keyword
         if (iskwdprim(kwd)) {
@@ -530,6 +552,141 @@ ASTBlock *parse_block(Lexer *lex, Arena *arena) {
     return NULL;
 
   return node;
+}
+
+ASTFuncDef *parse_funcdef(Lexer *lex, Arena *arena) {
+  ASTFuncDef *fn = aaloc(arena, ASTFuncDef);
+  if (!fn) return NULL;
+  fn->args = NULL;
+  fn->code = NULL;
+  Token *next = lexer_consume(lex);
+  if (!next) return NULL;
+
+  // expect declaration keyword
+  if (expect_token(next, TOKEN_KEYWORD, "function"))
+    return NULL;
+  next = lexer_peek(lex, 1);
+  if (!next) return NULL;
+
+  // TODO: handle generic parameters
+  // function <T = auto> T getFirst(T[] arr);
+
+  // get return type
+  ASTTypeRef *rettype = parse_typeref(lex, arena);
+  if (!rettype) return NULL;
+  fn->rettype = rettype;
+
+  // get function id
+  next = lexer_consume(lex);
+  if (!next) return NULL;
+  if (expect_token(next, TOKEN_IDENTIFIER, NULL))
+    return NULL;
+  fn->name = next->lexeme;
+  fn->nlen = next->len;
+
+  // expect arg opening
+  next = lexer_consume(lex);
+  if (!next) return NULL;
+  if (expect_token(next, TOKEN_BRACKET, "("))
+    return NULL;
+
+  // process args
+  ASTFuncArgDef *curr = NULL;
+  bool defargs = false; // whether expect args to have defaukt value
+  next = lexer_peek(lex, 1);
+  if (!next) return NULL;
+  while (!cmp_token(next, TOKEN_BRACKET, ")")) {
+    ASTFuncArgDef *arg = aaloc(arena, ASTFuncArgDef);
+    if (!arg) return NULL;
+    arg->next = NULL;
+    arg->defval = NULL;
+    arg->restarr = false;
+
+    if (curr) curr->next = arg;
+    else fn->args = arg;
+    curr = arg;
+
+    // get arg type
+    ASTTypeRef *argtype = parse_typeref(lex, arena);
+    if (!argtype) return NULL;
+    arg->type = argtype;
+
+    // get arg id
+    next = lexer_consume(lex);
+    if (expect_token(next, TOKEN_IDENTIFIER, NULL))
+      return NULL;
+    arg->name = next->lexeme;
+    arg->nlen = next->len;
+
+    // next token
+    next = lexer_peek(lex, 1);
+    if (!next) return NULL;
+
+    // rest args indicator
+    if (cmp_token(next, TOKEN_OPERATOR, "...")) {
+      lexer_consume(lex); // ...
+      arg->restarr = true;
+      break;
+    }
+
+    // default value
+    if (cmp_token(next, TOKEN_OPERATOR, "=")) {
+      lexer_consume(lex);
+      // parse expression with precedence 2 (exclude comma operator)
+      ASTExpr *defval = parse_infix(lex, arena, parse_factor(lex, arena), 2);
+      if (!defval) return NULL;
+      arg->defval = defval;
+      defargs = true;
+      next = lexer_peek(lex, 1);
+      if (!next) return NULL;
+    }
+
+    // required arg after optional ones
+    else if (defargs && (
+      cmp_token(next, TOKEN_OPERATOR, ",") ||
+      cmp_token(next, TOKEN_BRACKET, ")")
+    )) {
+      print_token(lexer_peek(lex, 0),
+        "syntax error: unexpected required argument after optional parameters\n");
+      return NULL;
+    }
+
+    // next arg
+    if (cmp_token(next, TOKEN_OPERATOR, ",")) {
+      lexer_consume(lex);
+      continue;
+    }
+
+    // end arg defs
+    if (cmp_token(next, TOKEN_BRACKET, ")"))
+      break;
+  }
+
+  // expect closing ')'
+  next = lexer_consume(lex);
+  if (!next) return NULL;
+  if (expect_token(next, TOKEN_BRACKET, ")"))
+    return NULL;
+
+  // TODO: thrown error types
+  // function void someErr() noexcept;
+
+  next = lexer_peek(lex, 1);
+  if (!next) return NULL;
+
+  // function definition
+  if (cmp_token(next, TOKEN_BRACKET, "{")) {
+    ASTBlock *code = parse_block(lex, arena);
+    if (!code) return NULL;
+    fn->code = code;
+    return fn;
+  }
+
+  // just a declaration
+  lexer_consume(lex);
+  if (expect_token(next, TOKEN_DELIMETER, ";"))
+    return NULL;
+  return fn;
 }
 
 ASTTypeRef *parse_typeref(Lexer *lex, Arena *arena) {

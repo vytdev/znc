@@ -4,6 +4,7 @@
 const char *OperatorNames[] = {
   // ordered from longest string to shortest
   [OP_UNK]      = "<unknown>",
+  "...",
 
   "&&=", "||=", "<<=", ">>=",
 
