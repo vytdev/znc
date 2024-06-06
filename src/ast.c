@@ -255,6 +255,23 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
     return parse_secondary(lex, arena, val);
   }
 
+  // type cast
+  if (cmp_token(next, TOKEN_OPERATOR, "<")) {
+    lexer_consume(lex); // consume '<'
+    ASTTypeRef *type = parse_typeref(lex, arena);
+    if (!type) return NULL;
+    next = lexer_consume(lex); // consume '>'
+    if (expect_token(next, TOKEN_OPERATOR, ">")) return NULL;
+    ASTExpr *val = parse_factor(lex, arena);
+    if (!val) return NULL;
+    // setup type cast node
+    ASTExpr *node = aaloc(arena, ASTExpr);
+    node->type = AST_EXPR_CAST;
+    node->val.cast.type = type;
+    node->val.cast.val = val;
+    return node;
+  }
+
   // expression enclosed with paren
   if (cmp_token(next, TOKEN_BRACKET, "(")) {
     lexer_consume(lex);

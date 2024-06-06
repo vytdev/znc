@@ -58,6 +58,11 @@ typedef struct ASTFuncCall {
   ASTFuncArg *args;
 } ASTFuncCall;
 
+typedef struct ASTTypeCast {
+  struct ASTExpr *val;
+  struct ASTTypeRef *type;
+} ASTTypeCast;
+
 typedef enum {
   AST_EXPR_IDENTIFIER,
   AST_EXPR_STRING,
@@ -67,6 +72,7 @@ typedef enum {
   AST_EXPR_BINOP,
   AST_EXPR_TERNOP,
   AST_EXPR_CALL,
+  AST_EXPR_CAST,
 } ASTExprType;
 
 typedef union {
@@ -78,6 +84,7 @@ typedef union {
   ASTBinaryOp binop;
   ASTTernaryOp ternop;
   ASTFuncCall fcall;
+  ASTTypeCast cast;
 } ASTExprVal;
 
 typedef struct ASTExpr {
