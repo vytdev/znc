@@ -182,22 +182,53 @@ typedef struct ASTFuncType {
   struct ASTTypeRef *ret;
 } ASTFuncType;
 
+typedef struct ASTTypeName {
+  char *name;
+  uvar nlen;
+} ASTTypeName;
+
 typedef enum {
   AST_TYPE_PRIMITIVE,
   AST_TYPE_ARRAY,
   AST_TYPE_FUNCTION,
+  AST_TYPE_NAME,
 } ASTTypeType;
 
 typedef union {
   PrimitiveType type;
   struct ASTTypeRef *aelem;
   ASTFuncType func;
+  ASTTypeName tname;
 } ASTTypeVal;
 
 typedef struct ASTTypeRef {
   ASTTypeType type;
   ASTTypeVal  val;
 } ASTTypeRef;
+
+typedef enum {
+  AST_ROOT_FUNCDEF,
+  AST_ROOT_ENUM,
+  AST_ROOT_TALIAS,
+} ASTDeclType;
+
+typedef union {
+  ASTFuncDef *func;
+  ASTEnum *enumr;
+  ASTTypeAlias *talias;
+} ASTDeclVal;
+
+typedef struct ASTDecl {
+  struct ASTDecl *next;
+  ASTDeclType type;
+  ASTDeclVal  val;
+  // TODO: imports and exports
+} ASTDecl;
+
+typedef struct ASTRoot {
+  ASTDecl *head;
+  ASTDecl *tail;
+} ASTRoot;
 
 /* process identifiers */
 ASTExpr *parse_identifier(Lexer *lex, Arena *arena);
@@ -237,6 +268,12 @@ ASTTypeRef *parse_typeref(Lexer *lex, Arena *arena);
 
 /* process type aliases */
 ASTTypeAlias *parse_typealias(Lexer *lex, Arena *arena);
+
+/* process root node */
+ASTRoot *parse_root(Lexer *lex, Arena *arena);
+
+/* parse ast tree given the source lexer and an arena allocator */
+ASTRoot *parse(Lexer *lex, Arena *arena);
 
 #ifdef _DEBUG
 

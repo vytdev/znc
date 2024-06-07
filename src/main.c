@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
   }
 
   // parse node
-  ASTTypeAlias *node = parse_typealias(&lex, arena);
+  ASTRoot *node = parse(&lex, arena);
   if (!node)
     fprintf(stderr, "znc: aborting due to error\n");
 

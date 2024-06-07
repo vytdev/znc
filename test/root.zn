@@ -1,0 +1,41 @@
+// from "std:math" import MathError, sqrt, * as math;
+
+
+// type <T = float> vec = T[];
+type vec = float[];
+
+/* export */ function double euclideanDistance(vec a, vec b) {
+  if (a.length != b.length)
+    // throw new MathError("vec a and vec b must have the same size");
+    return /*0.0*/ <double>0;
+
+  // float literals aren't implemented yet...
+  let double val = /*0.0*/ <double>0;
+
+  let int i = 0;
+  while (i < a.length) {
+    val += (a[i] - b[i]) ** 2;
+    i++;
+  }
+
+  /*
+  for (let int i = 0; i < a.length; i++)
+    val += (a[i] - b[i]) ** 2;
+  */
+
+  return sqrt(val);
+}
+
+enum UnitFactor float {
+  DEG_TO_RAD = math.PI / 180,
+  RAD_TO_DEG = 180 / math.PI,
+}
+
+/* export */ function double degToRad(float x) {
+  return UnitFactor.DEG_TO_RAD * x;
+}
+
+/* export */ function double radToDeg(float x) {
+  return UnitFactor.RAD_TO_DEG * x;
+}
+

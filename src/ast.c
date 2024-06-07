@@ -666,11 +666,6 @@ ASTFuncDef *parse_funcdef(Lexer *lex, Arena *arena) {
   next = lexer_peek(lex, 1);
   if (!next) return NULL;
 
-  bool err = false;
-  ASTFuncArgDef *args = parse_funcarg(lex, arena, &err);
-  if (err) return NULL;
-  fn->args = args;
-
   // TODO: handle generic parameters
   // function <T = auto> T getFirst(T[] arr);
 
@@ -686,6 +681,12 @@ ASTFuncDef *parse_funcdef(Lexer *lex, Arena *arena) {
     return NULL;
   fn->name = next->lexeme;
   fn->nlen = next->len;
+
+  // function args
+  bool err = false;
+  ASTFuncArgDef *args = parse_funcarg(lex, arena, &err);
+  if (err) return NULL;
+  fn->args = args;
 
   // TODO: thrown error types
   // function void someErr() noexcept;
@@ -956,6 +957,13 @@ ASTTypeRef *parse_typeref(Lexer *lex, Arena *arena) {
     node->val.func.args = args;
   }
 
+  // type name reference
+  else if (cmp_token(next, TOKEN_IDENTIFIER, NULL)) {
+    node->type = AST_TYPE_NAME;
+    node->val.tname.name = next->lexeme;
+    node->val.tname.nlen = next->len;
+  }
+
   // unknown type token
   else {
     expect_token(next, -1, NULL);
@@ -1023,6 +1031,69 @@ ASTTypeAlias *parse_typealias(Lexer *lex, Arena *arena) {
     return NULL;
 
   return node;
+}
+
+ASTRoot *parse_root(Lexer *lex, Arena *arena) {
+  ASTRoot *root = aaloc(arena, ASTRoot);
+  if (!root) return NULL;
+  root->head = NULL;
+  root->tail = NULL;
+
+  ASTDecl *curr = NULL;
+  Token *tok = lexer_peek(lex, 1);
+  if (!tok) return NULL;
+
+  while (tok->type != TOKEN_EOF) {
+    ASTDecl *def = aaloc(arena, ASTDecl);
+    if (!def) return NULL;
+
+    // a function
+    if (cmp_token(tok, TOKEN_KEYWORD, "function")) {
+      ASTFuncDef *fn = parse_funcdef(lex, arena);
+      if (!fn) return NULL;
+      def->type = AST_ROOT_FUNCDEF;
+      def->val.func = fn;
+    }
+
+    // an enum
+    else if (cmp_token(tok, TOKEN_KEYWORD, "enum")) {
+      ASTEnum *enumr = parse_enum(lex, arena);
+      if (!enumr) return NULL;
+      def->type = AST_ROOT_ENUM;
+      def->val.enumr = enumr;
+    }
+
+    // a type alias
+    else if (cmp_token(tok, TOKEN_KEYWORD, "type")) {
+      ASTTypeAlias *talias = parse_typealias(lex, arena);
+      if (!talias) return NULL;
+      def->type = AST_ROOT_TALIAS;
+      def->val.talias = talias;
+    }
+
+    // unknown token
+    else {
+      expect_token(tok, -1, NULL);
+      return NULL;
+    }
+
+    if (curr) curr->next = def;
+    else root->head = def;
+    curr = def;
+
+    // get next token
+    tok = lexer_peek(lex, 1);
+    if (!tok) return NULL;
+  }
+
+  root->tail = curr;
+
+  return root;
+}
+
+ASTRoot *parse(Lexer *lex, Arena *arena) {
+  if (!lex || !arena) return NULL;
+  return parse_root(lex, arena);
 }
 
 #ifdef _DEBUG
