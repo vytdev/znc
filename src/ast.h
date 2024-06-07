@@ -88,6 +88,7 @@ typedef union {
 } ASTExprVal;
 
 typedef struct ASTExpr {
+  Token *tok;
   ASTExprType type;
   ASTExprVal  val;
 } ASTExpr;
@@ -129,6 +130,7 @@ typedef union {
 } ASTStmVal;
 
 typedef struct ASTStm {
+  Token *tok;
   struct ASTStm *next; // used on ast blocks
   ASTStmType type;
   ASTStmVal  val;
@@ -140,6 +142,7 @@ typedef struct ASTBlock {
 } ASTBlock;
 
 typedef struct ASTFuncArgDef {
+  Token *tok;
   struct ASTFuncArgDef *next;
   struct ASTTypeRef *type;
   char *name;
@@ -149,6 +152,7 @@ typedef struct ASTFuncArgDef {
 } ASTFuncArgDef;
 
 typedef struct ASTFuncDef {
+  Token *tok;
   char *name;
   uvar nlen;
   ASTFuncArgDef *args;
@@ -157,6 +161,7 @@ typedef struct ASTFuncDef {
 } ASTFuncDef;
 
 typedef struct ASTEnumEntry {
+  Token *tok;
   struct ASTEnumEntry *next;
   char *name;
   uvar nlen;
@@ -164,6 +169,7 @@ typedef struct ASTEnumEntry {
 } ASTEnumEntry;
 
 typedef struct ASTEnum {
+  Token *tok;
   char *name;
   uvar nlen;
   ASTEnumEntry *head;
@@ -172,6 +178,7 @@ typedef struct ASTEnum {
 } ASTEnum;
 
 typedef struct ASTTypeAlias {
+  Token *tok;
   char *name;
   uvar nlen;
   struct ASTTypeRef *type;
@@ -202,6 +209,7 @@ typedef union {
 } ASTTypeVal;
 
 typedef struct ASTTypeRef {
+  Token *tok;
   ASTTypeType type;
   ASTTypeVal  val;
 } ASTTypeRef;

@@ -27,6 +27,7 @@ ASTExpr *parse_identifier(Lexer *lex, Arena *arena) {
     return NULL;
 
   // set some fields
+  node->tok = tok;
   node->type = AST_EXPR_IDENTIFIER;
   node->val.ident.name = tok->lexeme;
   node->val.ident.len = tok->len;
@@ -53,6 +54,7 @@ ASTExpr *parse_infix(Lexer *lex, Arena *arena, ASTExpr *lhs, int minprec) {
   // while token
   while (next->type == TOKEN_OPERATOR && getprec(getop(next->lexeme)) >= minprec) {
     lexer_consume(lex);
+    Token *optok = next;
     OperatorType op = getop(next->lexeme);
 
     // process right hand side operand
@@ -71,6 +73,7 @@ ASTExpr *parse_infix(Lexer *lex, Arena *arena, ASTExpr *lhs, int minprec) {
     // new expr
     ASTExpr *node = aaloc(arena, ASTExpr);
     if (!node) return NULL;
+    node->tok = optok;
     node->type = AST_EXPR_BINOP;
     node->val.binop.lhs = lhs;
     node->val.binop.op = op;
@@ -102,6 +105,7 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
     // make a new node containing the unary op
     ASTExpr *expr = aaloc(arena, ASTExpr);
     if (!expr) return NULL;
+    expr->tok = next;
     expr->type = AST_EXPR_UNOP;
     expr->val.unop.op = getop(next->lexeme);
     expr->val.unop.isprefix = true;
@@ -127,6 +131,7 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
     // new node
     ASTExpr *node = aaloc(arena, ASTExpr);
     if (!node) return NULL;
+    node->tok = next;
     node->type = AST_EXPR_UNOP;
     node->val.unop.op = getop(next->lexeme);
     node->val.unop.isprefix = false;
@@ -144,6 +149,7 @@ ASTExpr *parse_factor(Lexer *lex, Arena *arena) {
 
     ASTExpr *node = aaloc(arena, ASTExpr);
     if (!node) return NULL;
+    node->tok = next;
     node->type = AST_EXPR_TERNOP;
     node->val.ternop.op = OP_QST;
     node->val.ternop.lch = expr;
@@ -186,6 +192,7 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
     lexer_consume(lex);
     ASTExpr *node = aaloc(arena, ASTExpr);
     if (!node) return NULL;
+    node->tok = next;
     node->type = AST_EXPR_STRING;
     node->val.str.raw = next->lexeme;
     node->val.str.len = next->len;
@@ -197,6 +204,7 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
     lexer_consume(lex); // consume '['
     ASTExpr *expr = aaloc(arena, ASTExpr);
     if (!expr) return NULL;
+    expr->tok = next;
     expr->type = AST_EXPR_ARRAY;
     ASTArray *arr = NULL;
 
@@ -249,6 +257,7 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
     lexer_consume(lex); // consume the int
     ASTExpr *val = aaloc(arena, ASTExpr);
     if (!val) return NULL;
+    val->tok = next;
     val->type = AST_EXPR_INTEGER;
     val->val.intg.text = next->lexeme;
     val->val.intg.len = next->len;
@@ -257,6 +266,7 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
 
   // type cast
   if (cmp_token(next, TOKEN_OPERATOR, "<")) {
+    Token *tok = next;
     lexer_consume(lex); // consume '<'
     ASTTypeRef *type = parse_typeref(lex, arena);
     if (!type) return NULL;
@@ -266,6 +276,8 @@ ASTExpr *parse_primary(Lexer *lex, Arena *arena) {
     if (!val) return NULL;
     // setup type cast node
     ASTExpr *node = aaloc(arena, ASTExpr);
+    if (!node) return NULL;
+    node->tok = tok;
     node->type = AST_EXPR_CAST;
     node->val.cast.type = type;
     node->val.cast.val = val;
@@ -308,6 +320,7 @@ ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs) {
 
     ASTExpr *node = aaloc(arena, ASTExpr);
     if (!node) return NULL;
+    node->tok = next;
     node->type = AST_EXPR_BINOP;
     node->val.binop.op = OP_DOT;
     node->val.binop.lhs = lhs;
@@ -329,6 +342,7 @@ ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs) {
 
     ASTExpr *node = aaloc(arena, ASTExpr);
     if (!node) return NULL;
+    node->tok = next;
     node->type = AST_EXPR_BINOP;
     node->val.binop.op = OP_SBC;
     node->val.binop.lhs = lhs;
@@ -356,6 +370,7 @@ ASTExpr *parse_secondary(Lexer *lex, Arena *arena, ASTExpr *lhs) {
 
     ASTExpr *node = aaloc(arena, ASTExpr);
     if (!node) return NULL;
+    node->tok = next;
     node->type = AST_EXPR_CALL;
     node->val.fcall.fname = lhs;
     ASTFuncArg *curr = NULL;
@@ -457,6 +472,7 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
         if (!next) return NULL;
         if (expect_token(next, TOKEN_IDENTIFIER, NULL))
           return NULL;
+        stm->tok = next;
         stm->val.let.name = next->lexeme;
         stm->val.let.nlen = next->len;
 
@@ -481,6 +497,7 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
 
       case KWD_IF: {
         stm->type = AST_STM_IFELSE;
+        stm->tok = next;
 
         // expect condition opening '('
         next = lexer_consume(lex);
@@ -524,6 +541,7 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
 
       case KWD_WHILE: {
         stm->type = AST_STM_WHILE;
+        stm->tok = next;
 
         // expect condition opening '('
         next = lexer_consume(lex);
@@ -551,6 +569,7 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
 
       case KWD_RETURN: {
         stm->type = AST_STM_RETURN;
+        stm->tok = next;
         stm->val.retval = NULL;
 
         // check whether there's return value
@@ -572,14 +591,8 @@ ASTStm *parse_statement(Lexer *lex, Arena *arena) {
       }
 
       default:
-        // primitive type keyword
-        if (iskwdprim(kwd)) {
-          expect_token(next, -1, NULL);
-          return NULL;
-        }
-
-        // it is impossible to get unknown keyword, but just in-case :)
-        print_token(next, "parse error: unknown keyword\n");
+        // unexpected keyword
+        expect_token(next, -1, NULL);
         return NULL;
     }
   }
@@ -679,6 +692,7 @@ ASTFuncDef *parse_funcdef(Lexer *lex, Arena *arena) {
   if (!next) return NULL;
   if (expect_token(next, TOKEN_IDENTIFIER, NULL))
     return NULL;
+  fn->tok = next;
   fn->name = next->lexeme;
   fn->nlen = next->len;
 
@@ -755,6 +769,7 @@ ASTFuncArgDef *parse_funcarg(Lexer *lex, Arena *arena, bool *err) {
       *err = true;
       return NULL;
     }
+    arg->tok = next;
     arg->name = next->lexeme;
     arg->nlen = next->len;
 
@@ -840,6 +855,7 @@ ASTEnum *parse_enum(Lexer *lex, Arena *arena) {
   if (!next) return NULL;
   if (expect_token(next, TOKEN_IDENTIFIER, NULL))
     return NULL;
+  enode->tok = next;
   enode->name = next->lexeme;
   enode->nlen = next->len;
 
@@ -879,6 +895,7 @@ ASTEnum *parse_enum(Lexer *lex, Arena *arena) {
     if (!next) return NULL;
     if (expect_token(next, TOKEN_IDENTIFIER, NULL))
       return NULL;
+    ent->tok = next;
     ent->name = next->lexeme;
     ent->nlen = next->len;
 
@@ -925,6 +942,7 @@ ASTTypeRef *parse_typeref(Lexer *lex, Arena *arena) {
   if (!node) return NULL;
   Token *next = lexer_consume(lex);
   if (!next) return NULL;
+  node->tok = next;
 
   // a primitive type
   if (next->type == TOKEN_KEYWORD && iskwdprim(getkwd(next->lexeme))) {
@@ -974,6 +992,7 @@ ASTTypeRef *parse_typeref(Lexer *lex, Arena *arena) {
   next = lexer_peek(lex, 1);
   if (!next) return NULL;
   while (cmp_token(next, TOKEN_BRACKET, "[")) {
+    Token *tok = next; // tok used to ast
     lexer_consume(lex); // consume '['
 
     // expect ']'
@@ -984,6 +1003,7 @@ ASTTypeRef *parse_typeref(Lexer *lex, Arena *arena) {
 
     ASTTypeRef *ref = aaloc(arena, ASTTypeRef);
     if (!ref) return NULL;
+    ref->tok = tok;
     ref->type = AST_TYPE_ARRAY;
     ref->val.aelem = node;
     node = ref;
@@ -1012,6 +1032,7 @@ ASTTypeAlias *parse_typealias(Lexer *lex, Arena *arena) {
   next = lexer_consume(lex);
   if (!next || expect_token(next, TOKEN_IDENTIFIER, NULL))
     return NULL;
+  node->tok = next;
   node->name = next->lexeme;
   node->nlen = next->len;
 
