@@ -947,7 +947,7 @@ ASTTypeRef *parse_typeref(Lexer *lex, Arena *arena) {
   // a primitive type
   if (next->type == TOKEN_KEYWORD && iskwdprim(getkwd(next->lexeme))) {
     node->type = AST_TYPE_PRIMITIVE;
-    node->val.type = kwdtoprim(getkwd(next->lexeme));
+    node->val.type = getkwd(next->lexeme);
   }
 
   // a function type

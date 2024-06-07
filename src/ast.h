@@ -1,10 +1,10 @@
 #ifndef _ZNC_AST_H
 #define _ZNC_AST_H
+#include "keyword.h"
 #include "types.h"
 #include "lexer.h"
 #include "arena.h"
 #include "operator.h"
-#include "tsys.h"
 #include <stdbool.h>
 
 typedef struct ASTIdentifier {
@@ -202,7 +202,7 @@ typedef enum {
 } ASTTypeType;
 
 typedef union {
-  PrimitiveType type;
+  KeywordType type;
   struct ASTTypeRef *aelem;
   ASTFuncType func;
   ASTTypeName tname;
