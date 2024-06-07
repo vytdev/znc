@@ -171,6 +171,12 @@ typedef struct ASTEnum {
   struct ASTTypeRef *type;
 } ASTEnum;
 
+typedef struct ASTTypeAlias {
+  char *name;
+  uvar nlen;
+  struct ASTTypeRef *type;
+} ASTTypeAlias;
+
 typedef struct ASTFuncType {
   ASTFuncArgDef *args;
   struct ASTTypeRef *ret;
@@ -228,6 +234,9 @@ ASTEnum *parse_enum(Lexer *lex, Arena *arena);
 
 /* process type references */
 ASTTypeRef *parse_typeref(Lexer *lex, Arena *arena);
+
+/* process type aliases */
+ASTTypeAlias *parse_typealias(Lexer *lex, Arena *arena);
 
 #ifdef _DEBUG
 

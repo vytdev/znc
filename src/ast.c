@@ -987,6 +987,44 @@ ASTTypeRef *parse_typeref(Lexer *lex, Arena *arena) {
   return node;
 }
 
+ASTTypeAlias *parse_typealias(Lexer *lex, Arena *arena) {
+  ASTTypeAlias *node = aaloc(arena, ASTTypeAlias);
+  if (!node) return NULL;
+  Token *next;
+
+  // expect 'type'
+  next = lexer_consume(lex);
+  if (!next || expect_token(next, TOKEN_KEYWORD, "type"))
+    return NULL;
+
+  // TODO: integrate generics
+  // type <T> aslist = T[];
+
+  // get type alias name
+  next = lexer_consume(lex);
+  if (!next || expect_token(next, TOKEN_IDENTIFIER, NULL))
+    return NULL;
+  node->name = next->lexeme;
+  node->nlen = next->len;
+
+  // expect '='
+  next = lexer_consume(lex);
+  if (!next || expect_token(next, TOKEN_OPERATOR, "="))
+    return NULL;
+
+  // get definition
+  ASTTypeRef *sig = parse_typeref(lex, arena);
+  if (!sig) return NULL;
+  node->type = sig;
+
+  // expect ';'
+  next = lexer_consume(lex);
+  if (!next || expect_token(next, TOKEN_DELIMETER, ";"))
+    return NULL;
+
+  return node;
+}
+
 #ifdef _DEBUG
 void print_expr(ASTExpr *expr) {
   if (!expr) {

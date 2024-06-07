@@ -13,6 +13,7 @@ typedef enum {
 
   KWD_FUNCTION,
   KWD_ENUM,
+  KWD_TYPE,
 
   KWD_BYTE,
   KWD_SHORT,
