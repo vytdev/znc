@@ -32,8 +32,8 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // parse expr
-  ASTExpr *node = parse_expr(&lex, arena);
+  // parse type
+  ASTTypeRef *node = parse_typeref(&lex, arena);
   if (!node)
     fprintf(stderr, "znc: aborting due to error\n");
 

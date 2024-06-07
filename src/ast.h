@@ -171,14 +171,21 @@ typedef struct ASTEnum {
   struct ASTTypeRef *type;
 } ASTEnum;
 
+typedef struct ASTFuncType {
+  ASTFuncArgDef *args;
+  struct ASTTypeRef *ret;
+} ASTFuncType;
+
 typedef enum {
   AST_TYPE_PRIMITIVE,
   AST_TYPE_ARRAY,
+  AST_TYPE_FUNCTION,
 } ASTTypeType;
 
 typedef union {
   PrimitiveType type;
   struct ASTTypeRef *aelem;
+  ASTFuncType func;
 } ASTTypeVal;
 
 typedef struct ASTTypeRef {
@@ -212,6 +219,9 @@ ASTBlock *parse_block(Lexer *lex, Arena *arena);
 
 /* process function definitions */
 ASTFuncDef *parse_funcdef(Lexer *lex, Arena *arena);
+
+/* process function args (for definitions) */
+ASTFuncArgDef *parse_funcarg(Lexer *lex, Arena *arena, bool *err);
 
 /* process enum definitions */
 ASTEnum *parse_enum(Lexer *lex, Arena *arena);
