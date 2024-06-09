@@ -1,0 +1,129 @@
+
+  zinc programming language spec
+
+
+expr:
+  expr + expr
+  expr - expr
+  expr * expr
+  expr / expr
+  expr % expr
+  expr ** expr
+  expr && expr
+  expr || expr
+  !expr
+  expr & expr
+  expr | expr
+  expr ^ expr
+  ~expr
+  expr == expr
+  expr != expr
+  expr > expr
+  expr >= expr
+  expr < expr
+  expr <= expr
+  +expr
+  -expr
+  expr.id
+  expr[expr]
+  expr(expr, ...)
+  [ expr, ... ]
+  (expr)
+  id
+  string
+  charl
+  intl
+  floatl
+
+id:
+  [a-zA-Z_][a-zA-Z0-9_]*
+
+string:
+  "char..."
+
+charl:
+  'char'
+
+intl:
+  0
+  [1-9][0-9_]*
+  0x[0-9a-fA-F_]+
+  0b[01]+
+  0[0-7]+
+  0o[0-7]+
+
+floatl:
+  ([1-9][0-9]*|0|)\.[0-9]*
+
+char:
+  \b
+  \uXXXX
+  \u{XXXXXX}
+  \e
+  \t
+  \r
+  \n
+  \OOO                          > octal digit [0-7]
+  \377
+  \[4-7]O
+  \\
+                                > any char except '\'
+
+
+example (std:string):
+
+  export type string = String;
+
+  export interface Stringable {
+    string toString();
+  }
+
+  export class String implements Stringable {
+    private const char[] _buffer;
+
+    static void String(char[] stream) {
+      this._buffer = stream;
+    }
+
+    get const char[] buffer() {
+      return this._buffer;
+    }
+
+    char operator[] (uint idx) {
+      return this._buffer[idx];
+    }
+
+    // concatenation
+    string operator+ (string other) {
+      // code here
+    }
+
+    // ...other utils and ops
+
+    string toString() {
+      return this;
+    }
+  }
+
+example (std:int):
+
+  from "std:string" import Stringable, string;
+
+  export class <T extends int = int> Integer implements Stringable {
+    private T value = 0;
+
+    static void Integer(T val) {
+      this.value = val;
+    }
+
+    // ops here
+
+    string toString() {
+      // code here
+    }
+  }
+
+  export type <T = Integer<T>> ExtractInt = T;
+  // auto myVal = new Integer(<long>1000);
+  // ExtractInt<typeof myVal> // gives 'long'
+
